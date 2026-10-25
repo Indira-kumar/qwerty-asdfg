@@ -57,34 +57,41 @@ function WindScene() {
   const turbines = [
     { x: 144, y: 494, size: 0.67, delay: "-6s" },
     { x: 335, y: 476, size: 0.83, delay: "-11s" },
-    { x: 1136, y: 485, size: 0.72, delay: "-8s" },
-    { x: 1326, y: 501, size: 0.55, delay: "-17s" },
+    { x: 1086, y: 505, size: 1, delay: "-8s" },
+    { x: 1326, y: 501, size: 0.7, delay: "-17s" },
   ];
 
   return (
     <svg className="wind-scene" viewBox="0 0 1440 650" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
       <defs>
         <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
-          <stop stopColor="#2c527a" />
-          <stop offset="1" stopColor="#071b34" />
+          <stop stopColor="#37446e" />
+          <stop offset="1" stopColor="#111a3a" />
         </linearGradient>
         <linearGradient id="horizon" x1="0" y1="0" x2="0" y2="1">
-          <stop stopColor="#9fc7ee" stopOpacity=".47" />
-          <stop offset="1" stopColor="#9fc7ee" stopOpacity="0" />
+          <stop stopColor="#e2b8c4" stopOpacity=".52" />
+          <stop offset="1" stopColor="#a8b9e8" stopOpacity="0" />
         </linearGradient>
+        <radialGradient id="sunGlow">
+          <stop stopColor="#ffd8b5" stopOpacity=".82" />
+          <stop offset=".42" stopColor="#edb4a6" stopOpacity=".36" />
+          <stop offset="1" stopColor="#edb4a6" stopOpacity="0" />
+        </radialGradient>
       </defs>
+      <circle cx="1068" cy="397" r="260" fill="url(#sunGlow)" />
+      <circle cx="1068" cy="397" r="92" fill="#f7d1b3" opacity=".23" />
       <ellipse cx="720" cy="512" rx="610" ry="112" fill="url(#horizon)" />
       <path d="M0 511C173 500 330 503 468 510c171 8 323-6 469-2 194 6 321 5 503-4v146H0Z" fill="url(#sea)" />
-      <path d="M0 516c146 13 278 4 424 12 162 9 345-4 526 3 166 7 327-9 490 2" fill="none" stroke="#8db3dc" strokeOpacity=".27" strokeWidth="2" />
-      <path d="M0 557c241-8 381 12 612 4 278-10 516 2 828-6M0 595c247 6 513-11 734 0 209 10 420 0 706 8" fill="none" stroke="#8db3dc" strokeOpacity=".09" strokeWidth="2" />
+      <path d="M0 516c146 13 278 4 424 12 162 9 345-4 526 3 166 7 327-9 490 2" fill="none" stroke="#d6c7df" strokeOpacity=".3" strokeWidth="2" />
+      <path d="M0 557c241-8 381 12 612 4 278-10 516 2 828-6M0 595c247 6 513-11 734 0 209 10 420 0 706 8" fill="none" stroke="#b8c4ec" strokeOpacity=".12" strokeWidth="2" />
       {turbines.map(({ x, y, size, delay }) => (
         <g key={x} transform={`translate(${x} ${y}) scale(${size})`} className="scene-turbine">
-          <path d="M0 0 0-154" stroke="#dcecff" strokeWidth="4" />
-          <path d="M-12 0h24" stroke="#b4cdeb" strokeWidth="4" />
+          <path d="M0 0 0-154" stroke="#e9e9fa" strokeWidth="4" />
+          <path d="M-12 0h24" stroke="#bfc8ed" strokeWidth="4" />
           <g className="scene-rotor" style={{ animationDelay: delay }}>
-            <path d="M0-154 2-216 6-221 4-172ZM0-154l52 32 4 7-43-31ZM0-154l-55 34-7 1 47-35Z" fill="#e3f0ff" />
+            <path d="M0-154 2-216 6-221 4-172ZM0-154l52 32 4 7-43-31ZM0-154l-55 34-7 1 47-35Z" fill="#f4efff" />
           </g>
-          <circle cy="-154" r="5" fill="#f9fcff" />
+          <circle cy="-154" r="5" fill="#fff8f5" />
         </g>
       ))}
     </svg>
@@ -281,6 +288,7 @@ function DecisionPreview() {
 export function LandingPage() {
   return (
     <div className="landing-page">
+      <div className="landing-scroll-progress" aria-hidden="true" />
       <main>
         <section className="landing-hero" aria-labelledby="landing-title">
           <div className="hero-sky" aria-hidden="true" />
@@ -322,45 +330,45 @@ export function LandingPage() {
           </div>
         </section>
         <section className="landing-problem" id="problem" aria-labelledby="problem-title">
-          <div className="problem-heading">
-            <span className="section-index">The buying problem</span>
-            <h2 id="problem-title">A single wind number can hide the shortfall you need to cover.</h2>
-            <p>
-              Your consumers will need power tomorrow. Wind generation will only
-              be known tomorrow. If the forecast is high and wind underdelivers,
-              the gap still has to be served.
-            </p>
-          </div>
-          <div className="problem-sequence" aria-label="Decision sequence">
-            <div className="sequence-line" aria-hidden="true" />
-            <article>
-              <span className="sequence-time">09:00 · decision day</span>
-              <h3>Commit with what is known.</h3>
-              <p>Use the latest Elexon forecast actually published by the cutoff, not a later revision that makes the decision look easier in hindsight.</p>
-            </article>
-            <article>
-              <span className="sequence-time">Before the purchase</span>
-              <h3>Allow for the miss.</h3>
-              <p>See a planning wind level from the previous 21 completed delivery days. The daily amount scales with the forecast using past percentage errors.</p>
-            </article>
-            <article>
-              <span className="sequence-time">After delivery</span>
-              <h3>Find out what happened.</h3>
-              <p>Compare the frozen forecast with metered wind generation. Understand the error without letting tomorrow's actuals into today's decision.</p>
-            </article>
+          <div className="problem-layout">
+            <div className="problem-heading">
+              <span className="section-index">The buying problem</span>
+              <h2 id="problem-title">If wind falls short, you still have to cover demand.</h2>
+              <p>
+                The purchase comes before the generation. A forecast alone
+                cannot tell the desk how much wind to plan around.
+              </p>
+            </div>
+            <div className="problem-sequence" aria-label="Decision sequence">
+              <div className="sequence-line" aria-hidden="true" />
+              <article>
+                <span className="sequence-time">09:00 · decision day</span>
+                <h3>Freeze the forecast.</h3>
+                <p>Use the latest version published by the cutoff. Later updates cannot rewrite the decision.</p>
+              </article>
+              <article>
+                <span className="sequence-time">Before the purchase</span>
+                <h3>Allow for less wind.</h3>
+                <p>Use recent forecast errors to set a cautious wind level for planning.</p>
+              </article>
+              <article>
+                <span className="sequence-time">After delivery</span>
+                <h3>Review the outcome.</h3>
+                <p>Compare the frozen forecast with metered generation and see where it missed.</p>
+              </article>
+            </div>
           </div>
         </section>
         <section className="landing-product" id="product" aria-labelledby="product-title">
           <div className="product-intro">
             <div>
               <span className="section-index">The buying view</span>
-              <h2 id="product-title">See the forecast. Know its track record. Then reveal the outcome.</h2>
+              <h2 id="product-title">The wind assumption, with evidence attached.</h2>
             </div>
             <p>
-              A point forecast tells you what might arrive. A confidence score
-              shows its historical accuracy, while the planning level shows
-              how far similar forecasts have overcalled wind.
-              Move through the delivery day below, then reveal actual generation.
+              See the 09:00 forecast, recent accuracy, and a cautious planning
+              level. Reveal actual generation after delivery and inspect the
+              error hour by hour.
             </p>
           </div>
           <div className="product-preview">
