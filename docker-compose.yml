@@ -6,6 +6,6 @@ services:
   client:
     build: ./client
     ports:
-      - "8080:80"
+      - "8088:80"
     depends_on:
       - api
