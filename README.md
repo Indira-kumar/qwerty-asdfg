@@ -55,4 +55,10 @@ npm ci
 npm run dev
 ```
 
-Open the [local app](http://localhost:5173). The API needs internet access to Elexon. Copy `api/.env.example` to `api/.env` only if you need to change the defaults.
+Open the [local app](http://localhost:8088). The API needs internet access to Elexon. Copy `api/.env.example` to `api/.env` only if you need to change the defaults.
+
+## What will I do If get more time
+Currently the prediction optimizes for accuracy of wind energy generation, but the user might want to optimize for 'least dependecy on thermal power'. With more time, I could develop different algorithm to optimize for different needs, and provide that as a dropdown UX for the user. 
+
+### Note
+`GPT 6 sol` model was used for coding(especially the landing page in the UI).
