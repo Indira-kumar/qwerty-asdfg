@@ -501,7 +501,7 @@ html { scroll-behavior: smooth; }
   .proof-figures { margin-top: 32px; max-width: 680px; }
 }
 @media (max-width: 650px) {
-  .landing-hero { min-height: 760px; min-height: 100svh; }
+  .landing-hero { min-height: 860px; }
   .landing-header { height: 75px; }
   .landing-header nav { gap: 0; }
   .landing-header nav > a:not(.header-dashboard-link) { display: none; }
