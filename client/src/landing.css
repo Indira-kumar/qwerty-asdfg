@@ -431,7 +431,7 @@ html { scroll-behavior: smooth; }
   font-family: var(--display-type);
   font-weight: 700;
   font-size: 27px;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.015em;
   margin-top: 6px;
 }
 .preview-values small {
@@ -499,7 +499,7 @@ html { scroll-behavior: smooth; }
 .proof-copy > a:hover { text-decoration: underline; text-underline-offset: 4px; }
 .proof-figures { max-width: 520px; width: 100%; justify-self: start; border-top: 1px solid #c2cbe2; }
 .proof-figures > div { border-bottom: 1px solid #c2cbe2; padding: 21px 0; display: flex; align-items: baseline; justify-content: space-between; gap: 20px; }
-.proof-figures strong { font-family: var(--display-type); font-weight: 700; letter-spacing: -.05em; font-size: clamp(50px, 5vw, 72px); line-height: 1; white-space: nowrap; }
+.proof-figures strong { font-family: var(--display-type); font-weight: 700; letter-spacing: -.02em; font-size: clamp(50px, 5vw, 72px); line-height: 1; white-space: nowrap; }
 .proof-figures strong small { font-size: .46em; letter-spacing: -.04em; }
 .proof-figures span { color: #5a6680; text-align: right; font-size: 14px; }
 .proof-figures > p { color: #67728b; font-size: 14px; line-height: 1.6; margin: 19px 0 0; }

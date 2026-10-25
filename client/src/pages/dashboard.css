@@ -123,7 +123,7 @@
   padding: 8px 0 11px;
   background: #fff;
   font: 700 20px "Bricolage Grotesque", sans-serif;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.015em;
   color: #142338;
   outline-color: #315ce8;
 }
@@ -228,7 +228,7 @@
   display: block;
   font: 700 clamp(34px, 3vw, 45px)/1.1 "Bricolage Grotesque", sans-serif;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.055em;
+  letter-spacing: -0.025em;
   margin: 18px 0 16px;
 }
 .dash-metric strong i {
@@ -266,7 +266,7 @@
 .dash-confidence-heading b {
   color: #17263c;
   font: 700 19px "Bricolage Grotesque", sans-serif;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
   white-space: nowrap;
 }
 .dash-confidence-track {
@@ -509,7 +509,7 @@
 .dash-backtest article strong {
   display: block;
   font: 700 38px "Bricolage Grotesque", sans-serif;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.02em;
   margin: 18px 0 8px;
   color: #315ce8;
 }
