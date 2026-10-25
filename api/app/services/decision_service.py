@@ -4,10 +4,9 @@ from functools import lru_cache
 from pathlib import Path
 
 from app.schemas.decision_schema import DaySummary, DecisionResponse, HeatmapPoint, HourPoint, Metrics, OverviewResponse, RiskContext
+from app.settings import get_settings
 
 DATA_PATH = Path(__file__).resolve().parents[2] / "data" / "january_2026.json"
-LOOKBACK_DAYS = 21
-PLANNING_COVERAGE_TARGET = 0.80
 
 
 @lru_cache(maxsize=1)
@@ -31,7 +30,8 @@ def planning_level(forecast: float, historical_error_rates: list[float], q: floa
 
 
 def build_decision(decision_day: date) -> DecisionResponse:
-    if not date(2026, 1, 1) <= decision_day <= date(2026, 1, 31):
+    settings = get_settings()
+    if not settings.first_decision_date <= decision_day <= settings.last_decision_date:
         raise ValueError("Decision date must be in January 2026")
     data = load_snapshot()
     delivery_day = decision_day + timedelta(days=1)
@@ -42,7 +42,7 @@ def build_decision(decision_day: date) -> DecisionResponse:
     baseline_errors: list[float] = []
     daily_error_rates: list[float] = []
     daily_absolute_percentage_errors: list[float] = []
-    for lag in range(1, LOOKBACK_DAYS + 1):
+    for lag in range(1, settings.lookback_days + 1):
         historical_delivery = decision_day - timedelta(days=lag)
         historical_decision = historical_delivery - timedelta(days=1)
         old_forecast = data["forecasts"].get(historical_decision.isoformat(), {})
@@ -72,8 +72,8 @@ def build_decision(decision_day: date) -> DecisionResponse:
         hour = int(key[11:13])
         error_rates = error_rates_by_hour[hour]
         predicted = entry["forecast_mw"]
-        downside = planning_level(predicted, error_rates, PLANNING_COVERAGE_TARGET)
-        upside = max(predicted, predicted * (1 - percentile(error_rates, 1 - PLANNING_COVERAGE_TARGET))) if error_rates else None
+        downside = planning_level(predicted, error_rates, settings.planning_coverage_target)
+        upside = max(predicted, predicted * (1 - percentile(error_rates, 1 - settings.planning_coverage_target))) if error_rates else None
         measured = actual.get(key)
         signed_error = predicted - measured if measured is not None else None
         if signed_error is not None:
@@ -101,8 +101,8 @@ def build_decision(decision_day: date) -> DecisionResponse:
 
     forecast_mwh = sum(p.forecast_mw for p in points)
     actual_mwh = sum(p.actual_mw for p in points if p.actual_mw is not None) if points else None
-    planning_error_rate = max(0, percentile(daily_error_rates, PLANNING_COVERAGE_TARGET)) if daily_error_rates else None
-    downside_mwh = planning_level(forecast_mwh, daily_error_rates, PLANNING_COVERAGE_TARGET)
+    planning_error_rate = max(0, percentile(daily_error_rates, settings.planning_coverage_target)) if daily_error_rates else None
+    downside_mwh = planning_level(forecast_mwh, daily_error_rates, settings.planning_coverage_target)
     historical_daily_mape = (
         sum(daily_absolute_percentage_errors) / len(daily_absolute_percentage_errors)
         if daily_absolute_percentage_errors else None
@@ -111,7 +111,7 @@ def build_decision(decision_day: date) -> DecisionResponse:
     return DecisionResponse(
         decision_date=decision_day,
         delivery_date=delivery_day,
-        cutoff_time=f"{decision_day.isoformat()}T09:00:00Z",
+        cutoff_time=f"{decision_day.isoformat()}T{settings.decision_cutoff_hour_utc:02d}:00:00Z",
         source=data["source"],
         prepared_at=data["prepared_at"],
         forecast_mwh=forecast_mwh,
@@ -120,10 +120,10 @@ def build_decision(decision_day: date) -> DecisionResponse:
         actual_mwh=actual_mwh,
         downside_coverage=sum(covered) / len(covered) if covered else None,
         risk=RiskContext(
-            lookback_days=LOOKBACK_DAYS,
+            lookback_days=settings.lookback_days,
             completed_days=len(daily_error_rates),
             method="80th percentile of signed percentage forecast error from prior completed days; daily rates set the daily planning level and same-hour rates set the chart band",
-            coverage_target=PLANNING_COVERAGE_TARGET,
+            coverage_target=settings.planning_coverage_target,
             planning_error_rate=planning_error_rate,
             historical_daily_mape=historical_daily_mape,
             baseline=metrics(baseline_errors),
@@ -135,9 +135,10 @@ def build_decision(decision_day: date) -> DecisionResponse:
 
 @lru_cache(maxsize=31)
 def build_overview(through: date = date(2026, 1, 31)) -> OverviewResponse:
-    if not date(2026, 1, 1) <= through <= date(2026, 1, 31):
+    settings = get_settings()
+    if not settings.first_decision_date <= through <= settings.last_decision_date:
         raise ValueError("Decision date must be in January 2026")
-    decisions = [build_decision(date(2026, 1, day)) for day in range(1, through.day + 1)]
+    decisions = [build_decision(date(2026, 1, day)) for day in range(settings.first_decision_date.day, through.day + 1)]
     errors = [hour.error_mw for decision in decisions for hour in decision.hours if hour.error_mw is not None]
     covered_days = [
         decision.actual_mwh >= decision.downside_mwh

@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers.decision_router import router as decisions_router
+from app.settings import get_settings
 
 app = FastAPI(title="Windward API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=get_settings().allowed_origins,
     allow_credentials=False,
     allow_methods=["GET"],
     allow_headers=["*"],

@@ -3,16 +3,16 @@ from datetime import date, timedelta
 import httpx
 
 from app.adapters.base import GenerationSource
+from app.settings import get_settings
 
 
 class ElexonAdapter(GenerationSource):
-    BASE_URL = "https://data.elexon.co.uk/bmrs/api/v1/datasets"
-
     def __init__(self, client: httpx.AsyncClient):
         self.client = client
 
     async def _get(self, dataset: str, params: dict[str, str]) -> list[dict]:
-        response = await self.client.get(f"{self.BASE_URL}/{dataset}/stream", params=params)
+        base_url = get_settings().elexon_base_url.rstrip("/")
+        response = await self.client.get(f"{base_url}/{dataset}/stream", params=params)
         response.raise_for_status()
         payload = response.json()
         return payload["data"] if isinstance(payload, dict) else payload

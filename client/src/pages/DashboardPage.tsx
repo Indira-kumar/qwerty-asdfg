@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 import { ArrowRight, CalendarDays, Download, Info, Wind } from "lucide-react";
 import {
   Area,
@@ -58,7 +59,6 @@ type Overview = {
   evaluated_hours: number;
 };
 
-const API = import.meta.env.VITE_API_BASE_URL ?? "";
 const mw = (n: number | null | undefined) =>
   n == null ? "—" : `${Math.round(n).toLocaleString("en-GB")} MW`;
 const gwh = (n: number | null | undefined) =>
@@ -305,7 +305,7 @@ export function DashboardPage() {
   useEffect(() => {
     const c = new AbortController();
     setOverview(null);
-    fetch(`${API}/api/decisions?through=${selected}`, { signal: c.signal })
+    fetch(`${API_BASE_URL}/api/decisions?through=${selected}`, { signal: c.signal })
       .then((r) => {
         if (!r.ok) throw Error("Could not load January overview");
         return r.json();
@@ -319,7 +319,7 @@ export function DashboardPage() {
   useEffect(() => {
     const c = new AbortController();
     setDecision(null);
-    fetch(`${API}/api/decisions/${selected}`, { signal: c.signal })
+    fetch(`${API_BASE_URL}/api/decisions/${selected}`, { signal: c.signal })
       .then((r) => {
         if (!r.ok) throw Error("Could not load the decision");
         return r.json();

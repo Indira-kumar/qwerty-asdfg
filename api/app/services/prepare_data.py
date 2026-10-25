@@ -9,6 +9,7 @@ from pathlib import Path
 import httpx
 
 from app.adapters.elexon import ElexonAdapter
+from app.settings import get_settings
 
 DATA_PATH = Path(__file__).resolve().parents[2] / "data" / "january_2026.json"
 FIRST_DECISION = date(2025, 10, 5)
@@ -28,7 +29,7 @@ def parse_timestamp(value: str) -> datetime:
 
 def freeze_forecast(rows: list[dict], decision_day: date) -> dict[str, dict]:
     """Latest available publication per target hour at 09:00 UTC."""
-    cutoff = datetime.combine(decision_day, time(9), timezone.utc)
+    cutoff = datetime.combine(decision_day, time(get_settings().decision_cutoff_hour_utc), timezone.utc)
     delivery_day = decision_day + timedelta(days=1)
     chosen: dict[str, dict] = {}
     for row in rows:
@@ -56,8 +57,9 @@ def hourly_actuals(rows: list[dict], day: date) -> dict[str, float]:
 
 
 async def build_snapshot() -> dict:
-    semaphore = asyncio.Semaphore(8)
-    async with httpx.AsyncClient(timeout=45, follow_redirects=True) as client:
+    settings = get_settings()
+    semaphore = asyncio.Semaphore(settings.elexon_concurrency)
+    async with httpx.AsyncClient(timeout=settings.elexon_timeout_seconds, follow_redirects=True) as client:
         source = ElexonAdapter(client)
 
         async def load_forecasts(day: date):
