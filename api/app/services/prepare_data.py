@@ -80,12 +80,19 @@ async def build_snapshot() -> dict:
         rows = published.get((day - timedelta(days=1)).isoformat(), []) + published[day.isoformat()]
         frozen[day.isoformat()] = freeze_forecast(rows, day)
 
+    hourly = {day: hourly_actuals(rows, date.fromisoformat(day)) for day, rows in actual.items()}
+    for decision_day, hours in frozen.items():
+        delivery_day = (date.fromisoformat(decision_day) + timedelta(days=1)).isoformat()
+        measured = hourly[delivery_day]
+        if len(hours) != 24 or len(measured) != 24 or set(hours) != set(measured):
+            raise ValueError(f"Incomplete hourly Elexon data for decision {decision_day}")
+
     return {
         "source": "Elexon BMRS WINDFOR and FUELHH/WIND",
         "prepared_at": datetime.now(timezone.utc).isoformat(),
         "cutoff_utc": "09:00",
         "forecasts": frozen,
-        "actuals": {day: hourly_actuals(rows, date.fromisoformat(day)) for day, rows in actual.items()},
+        "actuals": hourly,
     }
 
 
