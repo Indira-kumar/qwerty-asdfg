@@ -3,7 +3,7 @@ from datetime import date, timedelta
 from functools import lru_cache
 from pathlib import Path
 
-from app.schemas.decision import DaySummary, DecisionResponse, HourPoint, Metrics, OverviewResponse, RiskContext
+from app.schemas.decision import DaySummary, DecisionResponse, HeatmapPoint, HourPoint, Metrics, OverviewResponse, RiskContext
 
 DATA_PATH = Path(__file__).resolve().parents[2] / "data" / "january_2026.json"
 
@@ -116,6 +116,7 @@ def build_overview() -> OverviewResponse:
             mae_mw=d.realized.mae_mw if d.realized else None,
             downside_coverage=d.downside_coverage,
         ) for d in decisions],
+        heatmap=[HeatmapPoint(decision_date=d.decision_date, hour=int(h.start_time[11:13]), error_mw=h.error_mw) for d in decisions for h in d.hours],
         january_mae_mw=sum(abs(x) for x in errors) / len(errors) if errors else None,
         january_bias_mw=sum(errors) / len(errors) if errors else None,
         downside_coverage=sum(covered) / len(covered) if covered else None,

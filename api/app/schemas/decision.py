@@ -52,8 +52,15 @@ class DaySummary(BaseModel):
     downside_coverage: float | None
 
 
+class HeatmapPoint(BaseModel):
+    decision_date: date
+    hour: int
+    error_mw: float | None
+
+
 class OverviewResponse(BaseModel):
     days: list[DaySummary]
+    heatmap: list[HeatmapPoint]
     january_mae_mw: float | None
     january_bias_mw: float | None
     downside_coverage: float | None
