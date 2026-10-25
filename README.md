@@ -18,7 +18,7 @@ The project has three parts:
 
 - **Confidence score:** `100 − average daily percentage error`, rounded and capped at 0–100, using the preceding 21 completed delivery days. It describes past accuracy; **88/100 is not an 88% probability** for tomorrow.
 - **Planning wind level:** Reduce the day's forecast by the 80th percentile of signed daily percentage errors from those same 21 days, never increasing the forecast. The third dashboard card shows the difference between forecast and planning level. This is an allowance for less wind, **not a guaranteed minimum or a purchase volume**.
-- **After delivery:** Compare the frozen forecast with FUELHH/WIND actuals. Delivery-day actuals never enter that day's decision-time score or planning level. The detailed view shows hourly error, bias, and January coverage.
+- **After delivery:** Compare the forecast with FUELHH/WIND actuals. Delivery-day actuals never enter that day's decision-time score or planning level. The detailed view shows hourly error, bias, and January coverage.
 
 The lookback and error method were chosen using December 2025 decisions. The 21-day percentage method and the earlier 56-day absolute-error method each covered 23 of 31 December days; the former reduced the average planning buffer from 70.3 to 59.1 GWh. In the retrospective January review, the selected method covered 24 of 31 days. Run `cd api && python -m app.services.compare_planning` to reproduce the comparison.
 

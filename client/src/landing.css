@@ -495,7 +495,7 @@ html { scroll-behavior: smooth; }
 .proof-copy { max-width: 680px; justify-self: end; }
 .proof-copy h2 { font-size: clamp(44px, 4.4vw, 66px); }
 .proof-copy > p { max-width: 600px; color: #57627d; font-size: 18px; line-height: 1.65; margin: 28px 0 27px; }
-.proof-copy > a { display: inline-flex; align-items: center; gap: 9px; color: #394fae; font-size: 16px; font-weight: 700; }
+.proof-copy > a { display: inline-flex; align-items: center; gap: 9px; margin-top: 28px; color: #394fae; font-size: 16px; font-weight: 700; }
 .proof-copy > a:hover { text-decoration: underline; text-underline-offset: 4px; }
 .proof-figures { max-width: 520px; width: 100%; justify-self: start; border-top: 1px solid #c2cbe2; }
 .proof-figures > div { border-bottom: 1px solid #c2cbe2; padding: 21px 0; display: flex; align-items: baseline; justify-content: space-between; gap: 20px; }

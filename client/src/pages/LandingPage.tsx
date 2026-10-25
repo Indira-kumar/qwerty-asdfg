@@ -308,7 +308,7 @@ export function LandingPage() {
           </header>
           <div className="hero-copy">
             <p className="hero-context">For the desk buying tomorrow's power</p>
-            <h1 id="landing-title">You have to buy power before you know the wind.</h1>
+            <h1 id="landing-title">Buy power before you know the wind</h1>
             <p className="hero-lead">
               At 09:00 GMT, see tomorrow's wind forecast, how accurate recent
               forecasts were, and a cautious level to plan against.
@@ -354,7 +354,7 @@ export function LandingPage() {
               <article>
                 <span className="sequence-time">After delivery</span>
                 <h3>Review the outcome.</h3>
-                <p>Compare the frozen forecast with metered generation and see where it missed.</p>
+                <p>Compare the forecast with metered generation and see where it missed.</p>
               </article>
             </div>
           </div>
@@ -379,18 +379,12 @@ export function LandingPage() {
           <div className="proof-copy">
             <span className="section-index">The January pilot</span>
             <h2 id="proof-title">Every wind assumption should come with its evidence.</h2>
-            <p>
-              Explore every purchase decision from 1–31 January 2026. Inspect the
-              forecast available at 09:00, the planning level available then,
-              and the measured error after delivery.
-            </p>
             <Link to="/dashboard">Inspect the decision history <ArrowRight size={18} /></Link>
           </div>
           <div className="proof-figures">
             <div><strong>31</strong><span>decision dates</span></div>
             <div><strong>2.04 <small>GW</small></strong><span>mean absolute hourly error</span></div>
             <div><strong>77%</strong><span>of days at or above the planning level</span></div>
-            <p>Measured across 31 delivery days against an 80% historical coverage target. The planning level and confidence score use only prior completed days. Neither guarantees a delivery outcome.</p>
           </div>
         </section>
         <section className="landing-close" aria-labelledby="close-title">

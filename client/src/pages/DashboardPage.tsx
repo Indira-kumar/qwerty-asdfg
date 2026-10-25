@@ -434,7 +434,7 @@ export function DashboardPage() {
                     {decision.risk.historical_daily_mape == null
                       ? "—"
                       : `${Math.round(decision.risk.historical_daily_mape * 100)}%`}{" "}
-                    average daily error. Past accuracy, not a probability.
+                    average daily error.
                   </small>
                 </div>
               </article>
@@ -442,8 +442,7 @@ export function DashboardPage() {
                 <span>Planning wind level</span>
                 <strong>{gwh(decision.downside_mwh)}</strong>
                 <small>
-                  A cautious level from the previous {decision.risk.lookback_days} completed days.
-                  Actual wind can still be lower.
+                  A cautious level predicted from the previous {decision.risk.lookback_days} completed days.
                 </small>
               </article>
               <article className="dash-metric allowance">
@@ -505,9 +504,8 @@ export function DashboardPage() {
               <WindChart hours={decision.hours} actual={actual} />
               <p className="dash-chart-note">
                 <Info size={15} /> The band uses same-hour errors from the
-                previous {decision.risk.lookback_days} completed delivery days. The daily planning level
-                uses daily errors, so it differs from the sum of the hourly
-                line. Neither is a guaranteed minimum.
+                previous {decision.risk.lookback_days} completed delivery days. The planning level
+                uses daily errors.
               </p>
             </section>
             {mode === "nutshell" ? (
@@ -517,8 +515,7 @@ export function DashboardPage() {
                   <h2>Allow for less wind before committing.</h2>
                   <p>
                     Use the planning wind level alongside demand and existing
-                    supply to size purchases. It is a wind input, not a total
-                    amount to buy.
+                    supply to size purchases.
                   </p>
                   <button onClick={() => setMode("detailed")}>
                     Explore the evidence <ArrowRight size={17} />
@@ -533,7 +530,7 @@ export function DashboardPage() {
                   </h2>
                   <p>
                     {actual
-                      ? `Measured wind on ${dateLabel(decision.delivery_date)}. The frozen forecast missed by ${mw(decision.realized?.mae_mw)} on average.`
+                      ? `Measured wind on ${dateLabel(decision.delivery_date)}. The forecast missed by ${mw(decision.realized?.mae_mw)} on average.`
                       : "The actual generation is available now, but it was unknown when the 09:00 decision was made."}
                   </p>
                   <button onClick={() => showActual(true)}>
@@ -569,7 +566,7 @@ export function DashboardPage() {
                     </strong>
                     <h3>January mean absolute error</h3>
                     <p>
-                      Average absolute gap between the frozen forecast and
+                      Average absolute gap between the forecast and
                       measured wind.
                     </p>
                   </article>
