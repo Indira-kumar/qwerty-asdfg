@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.routers.decisions import router as decisions_router
 
 app = FastAPI(title="Windward API", version="0.1.0")
 app.add_middleware(
@@ -9,6 +10,7 @@ app.add_middleware(
     allow_methods=["GET"],
     allow_headers=["*"],
 )
+app.include_router(decisions_router)
 
 
 @app.get("/api/health")
