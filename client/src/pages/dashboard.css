@@ -348,6 +348,12 @@
 .dash-reveal.on > span i {
   transform: translateX(11px);
 }
+.dash-audit-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 .dash-legend {
   display: flex;
   flex-wrap: wrap;

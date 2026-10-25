@@ -191,10 +191,12 @@ function Heatmap({
   overview,
   selected,
   select,
+  actual,
 }: {
   overview: Overview;
   selected: string;
   select: (day: string) => void;
+  actual: boolean;
 }) {
   const lookup = new Map(
     overview.heatmap.map((h) => [`${h.decision_date}:${h.hour}`, h.error_mw]),
@@ -225,7 +227,7 @@ function Heatmap({
               {day.decision_date.slice(8)}
             </button>
             {Array.from({ length: 24 }, (_, h) => {
-              const error = lookup.get(`${day.decision_date}:${h}`);
+              const error = actual ? lookup.get(`${day.decision_date}:${h}`) : null;
               const intensity = Math.min(Math.abs(error ?? 0) / 6500, 1);
               const background =
                 error == null
@@ -239,8 +241,12 @@ function Heatmap({
                   className="dash-heat-cell"
                   style={{ background }}
                   onClick={() => select(day.decision_date)}
-                  title={`${dateLabel(day.decision_date)} ${String(h).padStart(2, "0")}:00 · ${mw(error)}`}
-                  aria-label={`${dateLabel(day.decision_date)} ${String(h).padStart(2, "0")}:00, error ${mw(error)}`}
+                  title={actual
+                    ? `${dateLabel(day.decision_date)} ${String(h).padStart(2, "0")}:00 · ${mw(error)}`
+                    : `${dateLabel(day.decision_date)} ${String(h).padStart(2, "0")}:00 · actuals hidden`}
+                  aria-label={actual
+                    ? `${dateLabel(day.decision_date)} ${String(h).padStart(2, "0")}:00, error ${mw(error)}`
+                    : `${dateLabel(day.decision_date)} ${String(h).padStart(2, "0")}:00, actuals hidden`}
                 />
               );
             })}
@@ -251,7 +257,20 @@ function Heatmap({
   );
 }
 
-function exportCsv(d: Decision) {
+function ActualToggle({ shown, onToggle }: { shown: boolean; onToggle: () => void }) {
+  return (
+    <button
+      className={`dash-reveal ${shown ? "on" : ""}`}
+      aria-pressed={shown}
+      onClick={onToggle}
+    >
+      <span><i /></span>
+      {shown ? "Hide actuals" : "Reveal actuals"}
+    </button>
+  );
+}
+
+function exportCsv(d: Decision, actual: boolean) {
   const rows = [
     "start_time,forecast_mw,downside_mw,upside_mw,actual_mw,error_mw,publish_time",
     ...d.hours.map((h) =>
@@ -260,8 +279,8 @@ function exportCsv(d: Decision) {
         h.forecast_mw,
         h.downside_mw ?? "",
         h.upside_mw ?? "",
-        h.actual_mw ?? "",
-        h.error_mw ?? "",
+        actual ? (h.actual_mw ?? "") : "",
+        actual ? (h.error_mw ?? "") : "",
         h.publish_time,
       ].join(","),
     ),
@@ -391,7 +410,7 @@ export function DashboardPage() {
           </div>
           <span className="dash-cutoff">
             <i />{" "}
-            {mode === "detailed" || actual
+            {actual
               ? "09:00 forecast + after-delivery review"
               : "As known at 09:00 GMT"}
           </span>
@@ -476,16 +495,7 @@ export function DashboardPage() {
                     average MW
                   </p>
                 </div>
-                <button
-                  className={`dash-reveal ${actual ? "on" : ""}`}
-                  aria-pressed={actual}
-                  onClick={() => showActual(!actual)}
-                >
-                  <span>
-                    <i />
-                  </span>
-                  {actual ? "Hide actuals" : "Reveal actuals"}
-                </button>
+                <ActualToggle shown={actual} onToggle={() => showActual(!actual)} />
               </div>
               <div className="dash-legend">
                 <span>
@@ -546,13 +556,13 @@ export function DashboardPage() {
                   <article>
                     <span>Through {dateLabel(selected)}</span>
                     <strong>
-                      {overview?.downside_coverage == null
+                      {!actual || overview?.downside_coverage == null
                         ? "—"
                         : `${Math.round(overview.downside_coverage * 100)}%`}
                     </strong>
                     <h3>Days above the planning level</h3>
                     <p>
-                      Observed coverage over {overview?.evaluated_days ?? "—"}{" "}
+                      Observed coverage over {actual ? (overview?.evaluated_days ?? "—") : "—"}{" "}
                       delivery days. The level targets{" "}
                       {Math.round(decision.risk.coverage_target * 100)}%
                       coverage based on prior daily errors; it does not
@@ -562,7 +572,7 @@ export function DashboardPage() {
                   <article>
                     <span>Realized accuracy</span>
                     <strong>
-                        {overview?.mean_absolute_error_mw == null
+                      {!actual || overview?.mean_absolute_error_mw == null
                           ? "—"
                           : `${(overview.mean_absolute_error_mw / 1000).toFixed(2)} GW`}
                     </strong>
@@ -575,7 +585,7 @@ export function DashboardPage() {
                   <article>
                     <span>Systematic direction</span>
                     <strong>
-                        {overview?.mean_bias_mw == null
+                      {!actual || overview?.mean_bias_mw == null
                           ? "—"
                           : `${overview.mean_bias_mw >= 0 ? "+" : ""}${(overview.mean_bias_mw / 1000).toFixed(2)} GW`}
                     </strong>
@@ -600,14 +610,14 @@ export function DashboardPage() {
                         </p>
                       </div>
                       <div className="dash-heat-legend">
-                        <i className="teal" /> Underforecast{" "}
-                        <i className="amber" /> Overforecast
+                        {actual ? <><i className="teal" /> Underforecast <i className="amber" /> Overforecast</> : "Actual errors hidden"}
                       </div>
                     </div>
                     <Heatmap
                       overview={overview}
                       selected={selected}
                       select={select}
+                      actual={actual}
                     />
                   </section>
                 )}
@@ -621,12 +631,15 @@ export function DashboardPage() {
                         hour.
                       </p>
                     </div>
-                    <button
-                      className="dash-export"
-                      onClick={() => exportCsv(decision)}
-                    >
-                      <Download size={16} /> Export CSV
-                    </button>
+                    <div className="dash-audit-actions">
+                      <ActualToggle shown={actual} onToggle={() => showActual(!actual)} />
+                      <button
+                        className="dash-export"
+                        onClick={() => exportCsv(decision, actual)}
+                      >
+                        <Download size={16} /> Export CSV
+                      </button>
+                    </div>
                   </div>
                   <div className="dash-table-wrap">
                     <table>
@@ -646,16 +659,15 @@ export function DashboardPage() {
                             <td>{hourLabel(h.start_time)}</td>
                             <td>{mw(h.forecast_mw)}</td>
                             <td>{mw(h.downside_mw)}</td>
-                            <td>{mw(h.actual_mw)}</td>
+                            <td>{actual ? mw(h.actual_mw) : "—"}</td>
                             <td
                               className={
-                                h.error_mw != null && h.error_mw > 0
+                                actual && h.error_mw != null && h.error_mw > 0
                                   ? "positive"
-                                  : "negative"
+                                  : actual ? "negative" : undefined
                               }
                             >
-                              {h.error_mw != null && h.error_mw > 0 ? "+" : ""}
-                              {mw(h.error_mw)}
+                              {actual ? <>{h.error_mw != null && h.error_mw > 0 ? "+" : ""}{mw(h.error_mw)}</> : "—"}
                             </td>
                             <td>
                               {h.publish_time.slice(0, 16).replace("T", " ")}
