@@ -1,28 +1,29 @@
 from datetime import date
 
-from fastapi import APIRouter, HTTPException
+import httpx
+from fastapi import APIRouter, HTTPException, Request
 
 from app.schemas.decision_schema import DecisionResponse, OverviewResponse
-from app.services.decision_service import build_decision, build_overview
+from app.services.prepare_data import DataUnavailableError
 
 router = APIRouter(prefix="/api/decisions", tags=["decisions"])
 
 
 @router.get("", response_model=OverviewResponse)
-def get_overview(through: date = date(2026, 1, 31)) -> OverviewResponse:
+async def get_overview(request: Request, through: date = date(2026, 1, 31)) -> OverviewResponse:
     try:
-        return build_overview(through)
+        return await request.app.state.decision_service.get_overview(through)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=503, detail="Elexon snapshot has not been prepared") from exc
+    except (httpx.HTTPError, DataUnavailableError) as exc:
+        raise HTTPException(status_code=503, detail="Elexon data is temporarily unavailable") from exc
 
 
 @router.get("/{decision_date}", response_model=DecisionResponse)
-def get_decision(decision_date: date) -> DecisionResponse:
+async def get_decision(request: Request, decision_date: date) -> DecisionResponse:
     try:
-        return build_decision(decision_date)
+        return await request.app.state.decision_service.get_decision(decision_date)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=503, detail="Elexon snapshot has not been prepared") from exc
+    except (httpx.HTTPError, DataUnavailableError) as exc:
+        raise HTTPException(status_code=503, detail="Elexon data is temporarily unavailable") from exc

@@ -1,17 +1,9 @@
-import json
 from datetime import date, timedelta
-from functools import lru_cache
-from pathlib import Path
 
+from app.adapters.base import GenerationSource
 from app.schemas.decision_schema import DaySummary, DecisionResponse, HeatmapPoint, HourPoint, Metrics, OverviewResponse, RiskContext
-from app.settings import get_settings
-
-DATA_PATH = Path(__file__).resolve().parents[2] / "data" / "january_2026.json"
-
-
-@lru_cache(maxsize=1)
-def load_snapshot() -> dict:
-    return json.loads(DATA_PATH.read_text())
+from app.services.prepare_data import load_generation_data
+from app.settings import Settings, get_settings
 
 
 def percentile(values: list[float], q: float) -> float:
@@ -29,11 +21,12 @@ def planning_level(forecast: float, historical_error_rates: list[float], q: floa
     return max(0, forecast * (1 - allowance))
 
 
-def build_decision(decision_day: date) -> DecisionResponse:
-    settings = get_settings()
+def build_decision(
+    decision_day: date, data: dict, settings: Settings | None = None
+) -> DecisionResponse:
+    settings = settings or get_settings()
     if not settings.first_decision_date <= decision_day <= settings.last_decision_date:
         raise ValueError("Decision date must be in January 2026")
-    data = load_snapshot()
     delivery_day = decision_day + timedelta(days=1)
     forecast = data["forecasts"].get(decision_day.isoformat(), {})
     actual = data["actuals"].get(delivery_day.isoformat(), {})
@@ -113,7 +106,7 @@ def build_decision(decision_day: date) -> DecisionResponse:
         delivery_date=delivery_day,
         cutoff_time=f"{decision_day.isoformat()}T{settings.decision_cutoff_hour_utc:02d}:00:00Z",
         source=data["source"],
-        prepared_at=data["prepared_at"],
+        retrieved_at=data["retrieved_at"],
         forecast_mwh=forecast_mwh,
         confidence_score=max(0, min(100, round(100 * (1 - historical_daily_mape)))) if historical_daily_mape is not None else None,
         downside_mwh=downside_mwh,
@@ -133,12 +126,16 @@ def build_decision(decision_day: date) -> DecisionResponse:
     )
 
 
-@lru_cache(maxsize=31)
-def build_overview(through: date = date(2026, 1, 31)) -> OverviewResponse:
-    settings = get_settings()
+def build_overview(
+    through: date, data: dict, settings: Settings | None = None
+) -> OverviewResponse:
+    settings = settings or get_settings()
     if not settings.first_decision_date <= through <= settings.last_decision_date:
         raise ValueError("Decision date must be in January 2026")
-    decisions = [build_decision(date(2026, 1, day)) for day in range(settings.first_decision_date.day, through.day + 1)]
+    decisions = [
+        build_decision(settings.first_decision_date + timedelta(days=offset), data, settings)
+        for offset in range((through - settings.first_decision_date).days + 1)
+    ]
     errors = [hour.error_mw for decision in decisions for hour in decision.hours if hour.error_mw is not None]
     covered_days = [
         decision.actual_mwh >= decision.downside_mwh
@@ -162,3 +159,25 @@ def build_overview(through: date = date(2026, 1, 31)) -> OverviewResponse:
         evaluated_days=len(covered_days),
         evaluated_hours=len(errors),
     )
+
+
+class DecisionService:
+    def __init__(self, source: GenerationSource, settings: Settings):
+        self.source = source
+        self.settings = settings
+
+    async def get_decision(self, decision_day: date) -> DecisionResponse:
+        self._validate_date(decision_day)
+        data = await load_generation_data(self.source, decision_day, decision_day, self.settings)
+        return build_decision(decision_day, data, self.settings)
+
+    async def get_overview(self, through: date) -> OverviewResponse:
+        self._validate_date(through)
+        data = await load_generation_data(
+            self.source, self.settings.first_decision_date, through, self.settings
+        )
+        return build_overview(through, data, self.settings)
+
+    def _validate_date(self, day: date) -> None:
+        if not self.settings.first_decision_date <= day <= self.settings.last_decision_date:
+            raise ValueError("Decision date must be in January 2026")

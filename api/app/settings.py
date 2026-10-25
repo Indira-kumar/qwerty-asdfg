@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     allowed_origins: list[str] = ["http://localhost:5173", "http://localhost:8088"]
     elexon_timeout_seconds: float = Field(default=45.0, gt=0)
     elexon_concurrency: int = Field(default=8, ge=1)
+    elexon_cache_maxsize: int = Field(default=128, ge=1)
+    elexon_cache_ttl_seconds: int = Field(default=3600, ge=1)
     decision_cutoff_hour_utc: int = Field(default=9, ge=0, le=23)
     lookback_days: int = Field(default=21, ge=1)
     planning_coverage_target: float = Field(default=0.8, gt=0, lt=1)

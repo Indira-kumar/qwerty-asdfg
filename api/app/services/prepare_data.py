@@ -1,19 +1,15 @@
-"""Build a compact, reproducible snapshot from the two Elexon feeds."""
+"""Align live Elexon forecasts and actuals into decision-time hourly data."""
 
 import asyncio
-import json
 from collections import defaultdict
 from datetime import date, datetime, time, timedelta, timezone
-from pathlib import Path
 
-import httpx
+from app.adapters.base import GenerationSource
+from app.settings import Settings, get_settings
 
-from app.adapters.elexon import ElexonAdapter
-from app.settings import get_settings
 
-DATA_PATH = Path(__file__).resolve().parents[2] / "data" / "january_2026.json"
-FIRST_DECISION = date(2025, 10, 5)
-LAST_DECISION = date(2026, 1, 31)
+class DataUnavailableError(RuntimeError):
+    """Elexon did not return a complete delivery day."""
 
 
 def dates_inclusive(first: date, last: date):
@@ -27,9 +23,12 @@ def parse_timestamp(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
-def freeze_forecast(rows: list[dict], decision_day: date) -> dict[str, dict]:
+def freeze_forecast(
+    rows: list[dict], decision_day: date, cutoff_hour_utc: int | None = None
+) -> dict[str, dict]:
     """Latest available publication per target hour at 09:00 UTC."""
-    cutoff = datetime.combine(decision_day, time(get_settings().decision_cutoff_hour_utc), timezone.utc)
+    cutoff_hour = cutoff_hour_utc if cutoff_hour_utc is not None else get_settings().decision_cutoff_hour_utc
+    cutoff = datetime.combine(decision_day, time(cutoff_hour), timezone.utc)
     delivery_day = decision_day + timedelta(days=1)
     chosen: dict[str, dict] = {}
     for row in rows:
@@ -56,57 +55,56 @@ def hourly_actuals(rows: list[dict], day: date) -> dict[str, float]:
     return {hour: sum(values) / 2 for hour, values in sorted(buckets.items()) if len(values) == 2}
 
 
-async def build_snapshot() -> dict:
-    settings = get_settings()
+async def load_generation_data(
+    source: GenerationSource,
+    first_decision: date,
+    last_decision: date,
+    settings: Settings,
+) -> dict:
+    """Fetch each publication/settlement day once, then align the requested span."""
+    first_required_decision = first_decision - timedelta(days=settings.lookback_days + 1)
     semaphore = asyncio.Semaphore(settings.elexon_concurrency)
-    async with httpx.AsyncClient(timeout=settings.elexon_timeout_seconds, follow_redirects=True) as client:
-        source = ElexonAdapter(client)
 
-        async def load_forecasts(day: date):
-            async with semaphore:
-                return day.isoformat(), await source.forecasts_published_on(day)
+    async def load_forecasts(day: date):
+        async with semaphore:
+            return day.isoformat(), await source.forecasts_published_on(day)
 
-        async def load_actuals(day: date):
-            async with semaphore:
-                return day.isoformat(), await source.wind_actuals_on(day)
+    async def load_actuals(day: date):
+        async with semaphore:
+            return day.isoformat(), await source.wind_actuals_on(day)
 
-        forecast_days = list(dates_inclusive(FIRST_DECISION - timedelta(days=1), LAST_DECISION))
-        # Settlement dates and UTC days differ during British Summer Time.
-        # The next settlement date can contain the final UTC hour of a day.
-        actual_days = list(dates_inclusive(FIRST_DECISION + timedelta(days=1), LAST_DECISION + timedelta(days=2)))
-        forecast_pairs = await asyncio.gather(*(load_forecasts(day) for day in forecast_days))
-        actual_pairs = await asyncio.gather(*(load_actuals(day) for day in actual_days))
+    forecast_days = list(dates_inclusive(first_required_decision - timedelta(days=1), last_decision))
+    # Settlement dates and UTC days differ during British Summer Time.
+    # The next settlement date can contain the final UTC hour of a day.
+    actual_days = list(dates_inclusive(first_required_decision + timedelta(days=1), last_decision + timedelta(days=2)))
+    forecast_pairs, actual_pairs = await asyncio.gather(
+        asyncio.gather(*(load_forecasts(day) for day in forecast_days)),
+        asyncio.gather(*(load_actuals(day) for day in actual_days)),
+    )
 
     published = dict(forecast_pairs)
     actual = dict(actual_pairs)
     frozen = {}
-    for day in dates_inclusive(FIRST_DECISION, LAST_DECISION):
+    for day in dates_inclusive(first_required_decision, last_decision):
         rows = published.get((day - timedelta(days=1)).isoformat(), []) + published[day.isoformat()]
-        frozen[day.isoformat()] = freeze_forecast(rows, day)
+        frozen[day.isoformat()] = freeze_forecast(rows, day, settings.decision_cutoff_hour_utc)
 
     hourly = {
         day.isoformat(): hourly_actuals(
             actual[day.isoformat()] + actual[(day + timedelta(days=1)).isoformat()], day
         )
-        for day in dates_inclusive(FIRST_DECISION + timedelta(days=1), LAST_DECISION + timedelta(days=1))
+        for day in dates_inclusive(first_required_decision + timedelta(days=1), last_decision + timedelta(days=1))
     }
     for decision_day, hours in frozen.items():
         delivery_day = (date.fromisoformat(decision_day) + timedelta(days=1)).isoformat()
         measured = hourly[delivery_day]
         if len(hours) != 24 or len(measured) != 24 or set(hours) != set(measured):
-            raise ValueError(f"Incomplete hourly Elexon data for decision {decision_day}")
+            raise DataUnavailableError(f"Incomplete hourly Elexon data for decision {decision_day}")
 
     return {
         "source": "Elexon BMRS WINDFOR and FUELHH/WIND",
-        "prepared_at": datetime.now(timezone.utc).isoformat(),
-        "cutoff_utc": "09:00",
+        "retrieved_at": datetime.now(timezone.utc).isoformat(),
+        "cutoff_utc": f"{settings.decision_cutoff_hour_utc:02d}:00",
         "forecasts": frozen,
         "actuals": hourly,
     }
-
-
-if __name__ == "__main__":
-    snapshot = asyncio.run(build_snapshot())
-    DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
-    DATA_PATH.write_text(json.dumps(snapshot, separators=(",", ":")))
-    print(f"Saved {DATA_PATH} ({len(snapshot['forecasts'])} decisions)")

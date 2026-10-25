@@ -1,8 +1,14 @@
 """Reproduce the December calibration and January backtest comparison."""
 
+import asyncio
 from datetime import date, timedelta
 
-from app.services.decision_service import load_snapshot, percentile, planning_level
+import httpx
+
+from app.adapters.elexon import ElexonAdapter
+from app.services.decision_service import percentile, planning_level
+from app.services.prepare_data import load_generation_data
+from app.settings import get_settings
 
 
 def daily_energy(snapshot: dict, decision_day: date) -> tuple[float, float] | None:
@@ -13,8 +19,7 @@ def daily_energy(snapshot: dict, decision_day: date) -> tuple[float, float] | No
     return sum(entry["forecast_mw"] for entry in forecast.values()), sum(actual.values())
 
 
-def evaluate(first: date, last: date, lookback_days: int, error_percentile: float, relative: bool) -> tuple[int, int, float, float]:
-    snapshot = load_snapshot()
+def evaluate(snapshot: dict, first: date, last: date, lookback_days: int, error_percentile: float, relative: bool) -> tuple[int, int, float, float]:
     covered = 0
     buffers: list[float] = []
     shortfalls: list[float] = []
@@ -40,7 +45,18 @@ def evaluate(first: date, last: date, lookback_days: int, error_percentile: floa
     return len(buffers), covered, sum(buffers) / len(buffers), sum(shortfalls) / len(shortfalls)
 
 
-if __name__ == "__main__":
+async def main() -> None:
+    settings = get_settings()
+    comparison_settings = settings.model_copy(update={"lookback_days": 56})
+    async with httpx.AsyncClient(
+        timeout=settings.elexon_timeout_seconds, follow_redirects=True
+    ) as client:
+        source = ElexonAdapter(client)
+        snapshot = await load_generation_data(
+            source, date(2025, 12, 1), date(2026, 1, 31), comparison_settings
+        )
+        await source.close_cache()
+
     candidates = [
         ("Previous: 56-day absolute / 75%", 56, 0.75, False),
         ("Selected: 21-day percentage / 80%", 21, 0.80, True),
@@ -53,5 +69,9 @@ if __name__ == "__main__":
             ("December validation", date(2025, 12, 1), date(2025, 12, 31)),
             ("January backtest", date(2026, 1, 1), date(2026, 1, 31)),
         ]:
-            count, covered, buffer, shortfall = evaluate(first, last, days, quantile, relative)
+            count, covered, buffer, shortfall = evaluate(snapshot, first, last, days, quantile, relative)
             print(f"  {label}: {covered}/{count} days covered; {buffer:.1f} GWh mean buffer; {shortfall:.1f} GWh mean shortfall")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

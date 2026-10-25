@@ -36,7 +36,7 @@ class DecisionResponse(BaseModel):
     delivery_date: date
     cutoff_time: str
     source: str
-    prepared_at: str
+    retrieved_at: str
     forecast_mwh: float
     confidence_score: int | None
     downside_mwh: float | None

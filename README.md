@@ -4,14 +4,14 @@ Windward helps a Great Britain electricity buying desk judge tomorrow's wind bef
 
 ## Implementation approach
 
-The original HLD is below. Its **09:00 PM** and **56-day** labels predate the final implementation: the app uses a **09:00 GMT** cutoff and **21 completed days** of history.
+The original HLD is below. Its **09:00 PM**, **56-day**, and snapshot labels predate the final implementation: the app uses a **09:00 GMT** cutoff, **21 completed days** of history, and live Elexon reads.
 
 ![Windward architecture diagram](hld.png)
 
 The project has three parts:
 
-- **Data preparation:** The Elexon adapter reads [WINDFOR](https://bmrs.elexon.co.uk/api-documentation/endpoint/datasets/WINDFOR/stream) forecast versions and [FUELHH/WIND](https://bmrs.elexon.co.uk/api-documentation/endpoint/datasets/FUELHH/stream) actuals. A builder selects the latest forecast published by 09:00 GMT for each next-day delivery hour, checks coverage, and saves a reproducible snapshot.
-- **Python API:** FastAPI serves the January overview and one decision date at a time. The service computes past forecast accuracy, a cautious planning wind level, and after-delivery error; response schemas keep those concepts separate.
+- **Data preparation:** The Elexon adapter reads [WINDFOR](https://bmrs.elexon.co.uk/api-documentation/endpoint/datasets/WINDFOR/stream) forecast versions and [FUELHH/WIND](https://bmrs.elexon.co.uk/api-documentation/endpoint/datasets/FUELHH/stream) actuals on each API request. A bounded, one-hour LRU cache reuses requests for the same dataset and day. The builder selects the latest forecast published by 09:00 GMT for each next-day delivery hour and checks coverage.
+- **Python API:** FastAPI serves the January overview through the selected decision date and one decision at a time. The service computes past forecast accuracy, a cautious planning wind level, and after-delivery error; response schemas keep those concepts separate.
 - **React client:** The landing page explains the buying problem. The dashboard offers a quick decision view, hourly charts, and a detailed retrospective review.
 
 ## Decision method
@@ -24,7 +24,7 @@ The lookback and error method were chosen using December 2025 decisions. The 21-
 
 ## Alternatives and tradeoffs
 
-- **Fixed snapshot vs live requests:** The checked-in Elexon-derived snapshot makes the pilot fast and repeatable. Refresh it with `cd api && python -m app.services.prepare_data`.
+- **Live requests vs a fixed snapshot:** The API reads Elexon directly and caches repeated day requests for one hour. Results may change if Elexon revises source data; the response includes its retrieval time.
 - **Planning coverage vs purchase optimization:** The 80% historical coverage target is an interpretable risk allowance, not a guarantee. Demand, existing contracts, and the relative costs of buying too much or too little are unavailable, so the app does not prescribe a purchase quantity.
 - **Measured wind vs all wind:** [Elexon notes](https://bmrs.elexon.co.uk/generation-by-fuel-type) that fuel-type outturn excludes embedded wind and farms without operational meters. The app measures forecast accuracy only for this covered wind subset.
 
@@ -36,7 +36,7 @@ The lookback and error method were chosen using December 2025 decisions. The 21-
 | `api/app/adapters/` | Source interface and Elexon adapter |
 | `api/app/services/` | Snapshot preparation, decision calculations, comparison |
 | `api/app/routers/`, `api/app/schemas/` | HTTP routes and response models |
-| `api/data/january_2026.json` | Reproducible pilot snapshot |
+| `api/app/settings.py`, `api/.env.example` | Validated server configuration and defaults |
 | `api/tests/` | Cutoff, alignment, calculation, and leakage checks |
 | `hld.png`, `docker-compose.yml` | Initial HLD and local deployment |
 
@@ -47,6 +47,8 @@ docker compose up --build
 ```
 
 Open the [app](http://localhost:8088) or the [API docs](http://localhost:8000/docs). For a local run without Docker, install `api/requirements.txt` and run `uvicorn app.main:app --reload` from `api/`; run `npm install && npm run dev` from `client/`.
+
+The API needs network access to Elexon. Copy `api/.env.example` to `api/.env` to override server settings, or set the same variables in the deployment environment. The client uses `VITE_API_BASE_URL` from `client/.env.example` when its API is on another origin; leave it empty for the local proxy.
 
 ## Verification and deployment
 
