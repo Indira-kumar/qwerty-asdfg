@@ -36,7 +36,14 @@ type Decision = {
   confidence_score: number | null;
   downside_mwh: number | null;
   actual_mwh: number | null;
-  risk: { completed_days: number; coverage_target: number; historical_daily_mape: number | null; baseline: Metrics | null };
+  risk: {
+    lookback_days: number;
+    completed_days: number;
+    coverage_target: number;
+    planning_error_rate: number | null;
+    historical_daily_mape: number | null;
+    baseline: Metrics | null;
+  };
   realized: Metrics | null;
   hours: Hour[];
 };
@@ -332,8 +339,8 @@ export function DashboardPage() {
             </h1>
             <p>
               Every forecast is frozen at 09:00 GMT, before the day-ahead buying
-              decision. See the estimate, planning level, and measured
-              outcome separately.
+              decision. See the estimate, planning level, and measured outcome
+              separately.
             </p>
           </div>
           <div className="dash-date-card">
@@ -407,20 +414,43 @@ export function DashboardPage() {
                 <div className="dash-confidence">
                   <div className="dash-confidence-heading">
                     <span>FORECAST CONFIDENCE SCORE</span>
-                    <b>{decision.confidence_score == null ? "—" : `${decision.confidence_score}/100`}</b>
+                    <b>
+                      {decision.confidence_score == null
+                        ? "—"
+                        : `${decision.confidence_score}/100`}
+                    </b>
                   </div>
-                  <div className="dash-confidence-track" role="meter" aria-label="Historical forecast confidence score" aria-valuemin={0} aria-valuemax={100} aria-valuenow={decision.confidence_score ?? undefined}>
-                    <i style={{ width: `${decision.confidence_score ?? 0}%` }} />
+                  <div
+                    className="dash-confidence-track"
+                    role="meter"
+                    aria-label="Historical forecast confidence score"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={decision.confidence_score ?? undefined}
+                  >
+                    <i
+                      style={{ width: `${decision.confidence_score ?? 0}%` }}
+                    />
                   </div>
                   <small>
-                    100 minus {decision.risk.historical_daily_mape == null ? "—" : `${Math.round(decision.risk.historical_daily_mape * 100)}%`} average daily error across {decision.risk.completed_days} prior days. An accuracy score, not a delivery probability.
+                    Prior {decision.risk.completed_days} days: {" "}
+                    {decision.risk.historical_daily_mape == null
+                      ? "—"
+                      : `${Math.round(decision.risk.historical_daily_mape * 100)}%`}{" "}
+                    average daily error. An accuracy score, not a probability.
                   </small>
                 </div>
               </article>
               <article className="dash-metric">
                 <span>PLANNING WIND LEVEL</span>
                 <strong>{gwh(decision.downside_mwh)}</strong>
-                <small>{Math.round(decision.risk.coverage_target * 100)}% historical daily coverage target · not guaranteed</small>
+                <div className="dash-equation">
+                  {gwh(decision.forecast_mwh)} × (1 − {decision.risk.planning_error_rate == null ? "—" : `${(decision.risk.planning_error_rate * 100).toFixed(1)}%`})
+                </div>
+                <small>
+                  {Math.round(decision.risk.coverage_target * 100)}% historical
+                  daily coverage target · {decision.risk.lookback_days}-day lookback · not guaranteed
+                </small>
               </article>
               <article className="dash-metric">
                 <span>TYPICAL HISTORICAL MISS</span>
@@ -480,7 +510,7 @@ export function DashboardPage() {
               <WindChart hours={decision.hours} actual={actual} />
               <p className="dash-chart-note">
                 <Info size={15} /> The band uses same-hour errors from the
-                previous 56 completed delivery days. The daily planning level
+                previous {decision.risk.lookback_days} completed delivery days. The daily planning level
                 uses daily errors, so it differs from the sum of the hourly
                 line. Neither is a guaranteed minimum.
               </p>
@@ -532,10 +562,13 @@ export function DashboardPage() {
                         ? "—"
                         : `${Math.round(overview.downside_coverage * 100)}%`}
                     </strong>
-                  <h3>Days above the planning level</h3>
-                  <p>
+                    <h3>Days above the planning level</h3>
+                    <p>
                       Observed coverage over {overview?.evaluated_days ?? "—"}{" "}
-                      delivery days. The level targets {Math.round(decision.risk.coverage_target * 100)}% coverage based on prior daily errors; it does not guarantee delivery.
+                      delivery days. The level targets{" "}
+                      {Math.round(decision.risk.coverage_target * 100)}%
+                      coverage based on prior daily errors; it does not
+                      guarantee delivery.
                     </p>
                   </article>
                   <article>

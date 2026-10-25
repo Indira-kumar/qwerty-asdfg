@@ -342,7 +342,7 @@ export function LandingPage() {
             <article>
               <span className="sequence-time">Before the purchase</span>
               <h3>Allow for the miss.</h3>
-              <p>See a planning wind level from the previous 56 completed delivery days. The daily amount uses daily errors; the chart uses same-hour errors.</p>
+              <p>See a planning wind level from the previous 21 completed delivery days. The daily amount scales with the forecast using past percentage errors.</p>
             </article>
             <article>
               <span className="sequence-time">After delivery</span>
@@ -382,8 +382,8 @@ export function LandingPage() {
           <div className="proof-figures">
             <div><strong>31</strong><span>decision dates</span></div>
             <div><strong>2.04 <small>GW</small></strong><span>mean absolute hourly error</span></div>
-            <div><strong>71%</strong><span>of days at or above the planning level</span></div>
-            <p>Measured across 31 delivery days against a 75% historical coverage target. The planning level and confidence score use only prior completed days. Neither guarantees a delivery outcome.</p>
+            <div><strong>77%</strong><span>of days at or above the planning level</span></div>
+            <p>Measured across 31 delivery days against an 80% historical coverage target. The planning level and confidence score use only prior completed days. Neither guarantees a delivery outcome.</p>
           </div>
         </section>
         <section className="landing-close" aria-labelledby="close-title">
