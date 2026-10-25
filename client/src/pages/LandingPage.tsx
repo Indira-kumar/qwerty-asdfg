@@ -302,9 +302,8 @@ export function LandingPage() {
             <p className="hero-context">For the desk buying tomorrow's power</p>
             <h1 id="landing-title">You have to buy power before you know the wind.</h1>
             <p className="hero-lead">
-              Windward freezes the forecast available at your 09:00 GMT cutoff
-              and scores its historical accuracy. See a planning level shaped
-              by prior misses before you commit to tomorrow's wind assumption.
+              At 09:00 GMT, see tomorrow's wind forecast, how accurate recent
+              forecasts were, and a cautious level to plan against.
             </p>
             <div className="hero-actions">
               <Link className="landing-primary-cta" to="/dashboard">
@@ -316,7 +315,7 @@ export function LandingPage() {
             </div>
           </div>
           <div className="hero-bottom">
-            <span>Great Britain wind · Elexon data · January 2026 decisions</span>
+            <span>GB metered wind · Elexon data · January 2026 decisions</span>
             <a href="#problem" aria-label="Scroll to the buying problem">
               Scroll to explore <ChevronDown size={18} />
             </a>
@@ -401,7 +400,7 @@ export function LandingPage() {
           <span>windward</span>
         </div>
         <p>Windward informs the wind input to a purchase. Total volume still depends on demand, contracts, and other generation.</p>
-        <span>Great Britain · January 2026 pilot</span>
+        <span>GB metered wind · January 2026 pilot</span>
       </footer>
     </div>
   );

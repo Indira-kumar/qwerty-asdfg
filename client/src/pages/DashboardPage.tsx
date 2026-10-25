@@ -338,9 +338,8 @@ export function DashboardPage() {
               <em>with the risk in view.</em>
             </h1>
             <p>
-              Every forecast is frozen at 09:00 GMT, before the day-ahead buying
-              decision. See the estimate, planning level, and measured outcome
-              separately.
+              See the wind forecast available at 09:00 GMT, a planning level
+              based on past errors, and what arrived after delivery.
             </p>
           </div>
           <div className="dash-date-card">
@@ -433,36 +432,34 @@ export function DashboardPage() {
                     />
                   </div>
                   <small>
-                    Prior {decision.risk.completed_days} days: {" "}
+                    Previous {decision.risk.completed_days} days: {" "}
                     {decision.risk.historical_daily_mape == null
                       ? "—"
                       : `${Math.round(decision.risk.historical_daily_mape * 100)}%`}{" "}
-                    average daily error. An accuracy score, not a probability.
+                    average daily error. Past accuracy, not a probability.
                   </small>
                 </div>
               </article>
               <article className="dash-metric">
                 <span>PLANNING WIND LEVEL</span>
                 <strong>{gwh(decision.downside_mwh)}</strong>
-                <div className="dash-equation">
-                  {gwh(decision.forecast_mwh)} × (1 − {decision.risk.planning_error_rate == null ? "—" : `${(decision.risk.planning_error_rate * 100).toFixed(1)}%`})
-                </div>
                 <small>
-                  {Math.round(decision.risk.coverage_target * 100)}% historical
-                  daily coverage target · {decision.risk.lookback_days}-day lookback · not guaranteed
+                  A cautious wind amount based on the previous {decision.risk.lookback_days} days.
+                  Actual wind can still be lower.
                 </small>
               </article>
               <article className="dash-metric">
-                <span>TYPICAL HISTORICAL MISS</span>
+                <span>ALLOWANCE FOR LESS WIND</span>
                 <strong>
-                  {decision.risk.baseline
-                    ? (decision.risk.baseline.mae_mw / 1000).toFixed(2)
-                    : "—"}{" "}
-                  <i>GW</i>
+                  {gwh(
+                    decision.downside_mwh == null
+                      ? null
+                      : Math.max(0, decision.forecast_mwh - decision.downside_mwh),
+                  )}
                 </strong>
                 <small>
-                  Mean absolute error · {decision.risk.completed_days} prior
-                  days
+                  Expected wind minus planning wind. This is the gap to allow
+                  for when sizing purchases.
                 </small>
               </article>
             </section>
@@ -521,15 +518,9 @@ export function DashboardPage() {
                   <span>WHAT THIS MEANS FOR THE BUYING DESK</span>
                   <h2>Allow for less wind before committing.</h2>
                   <p>
-                    The gap between expected wind and the daily planning level
-                    is{" "}
-                    <b>
-                      {gwh(
-                        decision.forecast_mwh - (decision.downside_mwh ?? 0),
-                      )}
-                    </b>
-                    . Combine this with demand and existing positions to size
-                    purchases.
+                    Use the planning wind level alongside demand and existing
+                    supply to size purchases. It is a wind input, not a total
+                    amount to buy.
                   </p>
                   <button onClick={() => setMode("detailed")}>
                     Explore the evidence <ArrowRight size={17} />
@@ -683,8 +674,8 @@ export function DashboardPage() {
             <footer className="dash-footer">
               Elexon BMRS · WINDFOR + FUELHH/WIND{" "}
               <span>
-                Great Britain metered wind only. Forecast error = forecast −
-                actual.
+                GB transmission-metered wind only; embedded wind is excluded.
+                Forecast error = forecast − actual.
               </span>
             </footer>
           </>
