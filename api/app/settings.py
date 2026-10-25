@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     )
 
     elexon_base_url: str = "https://data.elexon.co.uk/bmrs/api/v1/datasets"
-    allowed_origins: list[str] = ["http://localhost:5173", "http://localhost:8088"]
+    allowed_origins: list[str] = ["https://qwerty-asdfg-client.vercel.app"]
     elexon_timeout_seconds: float = Field(default=45.0, gt=0)
     elexon_concurrency: int = Field(default=8, ge=1)
     elexon_cache_maxsize: int = Field(default=128, ge=1)
