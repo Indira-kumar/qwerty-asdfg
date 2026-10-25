@@ -1,9 +1,12 @@
 .dash-page {
   min-height: 100vh;
-  background: #f7f9fb;
-  color: #142338;
-  font-family: "IBM Plex Sans", sans-serif;
+  background: #f5f7fa;
+  color: #17263c;
+  font-family: "Instrument Sans", sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
 }
+.dash-page :focus-visible { outline: 3px solid #6c89ed; outline-offset: 3px; }
 .dash-page button,
 .dash-page select {
   font: inherit;
@@ -12,7 +15,7 @@
   cursor: pointer;
 }
 .dash-header {
-  height: 78px;
+  height: 76px;
   border-bottom: 1px solid #e5ebf1;
   background: #fff;
   display: flex;
@@ -23,18 +26,15 @@
 }
 .dash-header > div {
   font-size: 13px;
-  color: #8996a6;
-  letter-spacing: 0.02em;
+  color: #67788e;
 }
 .dash-logo {
   display: flex;
   align-items: center;
   gap: 9px;
   text-decoration: none;
-  font:
-    800 23px "Archivo",
-    sans-serif;
-  letter-spacing: -0.06em;
+  font: 700 23px/1 "Bricolage Grotesque", sans-serif;
+  letter-spacing: -0.055em;
 }
 .dash-logo span {
   width: 35px;
@@ -53,96 +53,93 @@
   align-items: center;
   gap: 5px;
   text-decoration: none;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 600;
 }
 .dash-main {
-  max-width: 1392px;
+  max-width: 1320px;
   margin: 0 auto;
-  padding: 60px 48px 40px;
+  padding: 56px 48px 40px;
 }
 .dash-intro {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 35px;
-  margin-bottom: 48px;
+  gap: 48px;
+  margin-bottom: 40px;
 }
 .dash-kicker {
   display: block;
-  color: #315ce8;
-  font:
-    700 11px "IBM Plex Sans",
-    sans-serif;
-  letter-spacing: 0.16em;
+  color: #3659c4;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
 }
 .dash-intro h1 {
-  font:
-    800 clamp(42px, 4.5vw, 70px)/1.04 "Archivo",
-    sans-serif;
-  letter-spacing: -0.067em;
-  margin: 15px 0 20px;
+  font: 700 clamp(42px, 4.5vw, 64px)/1.06 "Bricolage Grotesque", sans-serif;
+  letter-spacing: -0.055em;
+  margin: 16px 0 18px;
+  text-wrap: balance;
 }
 .dash-intro h1 em {
   font-style: normal;
   color: #315ce8;
 }
 .dash-intro p {
-  max-width: 610px;
-  font-size: 16px;
-  line-height: 1.75;
-  color: #62718a;
+  max-width: 580px;
+  font-size: 17px;
+  line-height: 1.6;
+  color: #5e6e82;
   margin: 0;
 }
 .dash-date-card {
-  flex: 0 0 320px;
+  flex: 0 0 308px;
   background: #fff;
   border: 1px solid #dfe6ee;
-  border-radius: 18px;
-  padding: 23px 25px;
-  box-shadow: 0 15px 45px rgba(31, 55, 85, 0.045);
+  border-radius: 14px;
+  padding: 22px 24px;
+  box-shadow: 0 12px 30px rgba(31, 55, 85, 0.035);
 }
 .dash-date-card > span {
   display: flex;
   align-items: center;
   gap: 8px;
   color: #315ce8;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0;
 }
 .dash-date-card label {
   display: block;
-  margin-top: 20px;
-  color: #718097;
-  font-size: 12px;
+  margin-top: 18px;
+  color: #67788e;
+  font-size: 13px;
 }
 .dash-date-card select {
   display: block;
   width: 100%;
   border: 0;
   border-bottom: 1px solid #e2e9f1;
-  padding: 10px 0 13px;
+  padding: 8px 0 11px;
   background: #fff;
-  font:
-    700 21px "Archivo",
-    sans-serif;
-  letter-spacing: -0.04em;
+  font: 700 20px "Bricolage Grotesque", sans-serif;
+  letter-spacing: -0.035em;
   color: #142338;
   outline-color: #315ce8;
 }
 .dash-date-card small {
   display: block;
   margin-top: 13px;
-  color: #8693a3;
-  font-size: 11px;
+  color: #66788e;
+  font-size: 12px;
+  line-height: 1.5;
 }
 .dash-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid #dfe7ef;
-  margin-bottom: 24px;
+  margin-bottom: 22px;
 }
 .dash-tabs {
   display: flex;
@@ -153,19 +150,18 @@
   border: 0;
   border-bottom: 3px solid transparent;
   padding: 0 1px 17px;
-  color: #8a98aa;
+  color: #66788e;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
 }
 .dash-tabs button.active {
   border-color: #315ce8;
   color: #15253c;
 }
 .dash-cutoff {
-  color: #698579;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  color: #55766f;
+  font-size: 12px;
+  font-weight: 600;
 }
 .dash-cutoff i {
   display: inline-block;
@@ -177,25 +173,28 @@
 }
 .dash-metrics {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
+  grid-template-columns: 1.06fr 1.06fr .9fr;
+  gap: 18px;
+  margin-bottom: 22px;
 }
 .dash-metric {
   position: relative;
   overflow: hidden;
-  min-height: 174px;
+  min-height: 250px;
   background: #fff;
-  border: 1px solid #e3eaf2;
-  border-radius: 17px;
-  padding: 26px 27px;
+  border: 1px solid #dfe6ee;
+  border-radius: 15px;
+  padding: 26px 27px 25px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 .dash-metric.primary {
-  background: #315ce8;
+  background: #294fcf;
   color: #fff;
-  border-color: #315ce8;
-  min-height: 212px;
+  border-color: #294fcf;
 }
+.dash-metric.allowance { background: #edf2f8; }
 .dash-metric.primary > span,
 .dash-metric.primary > strong,
 .dash-confidence {
@@ -205,10 +204,10 @@
 .dash-metric.primary:after {
   content: "";
   position: absolute;
-  width: 225px;
-  height: 225px;
-  right: -80px;
-  top: -105px;
+  width: 240px;
+  height: 240px;
+  right: -100px;
+  top: -120px;
   border: 1px solid rgba(255, 255, 255, 0.23);
   border-radius: 50%;
   box-shadow:
@@ -217,21 +216,20 @@
 }
 .dash-metric > span {
   display: block;
-  color: #8795a5;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.13em;
+  color: #53677f;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
 }
 .dash-metric.primary > span {
   color: #d2ddff;
 }
 .dash-metric strong {
   display: block;
-  font:
-    700 clamp(31px, 3vw, 46px) "Archivo",
-    sans-serif;
-  letter-spacing: -0.07em;
-  margin: 16px 0 12px;
+  font: 700 clamp(34px, 3vw, 45px)/1.1 "Bricolage Grotesque", sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.055em;
+  margin: 18px 0 16px;
 }
 .dash-metric strong i {
   font-style: normal;
@@ -239,56 +237,63 @@
   letter-spacing: -0.03em;
 }
 .dash-metric small {
-  color: #8795a5;
-  font-size: 11px;
+  display: block;
+  margin-top: auto;
+  color: #5e6f84;
+  font-size: 13px;
+  line-height: 1.55;
+  max-width: 34ch;
 }
 .dash-metric.primary small {
-  color: #dbe4ff;
+  color: #e0e8ff;
 }
 .dash-confidence {
-  max-width: 400px;
-  margin-top: 19px;
+  width: 100%;
+  margin-top: auto;
+  padding-top: 15px;
+  border-top: 1px solid #e5eaf1;
 }
 .dash-confidence-heading {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 14px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: #e1e9ff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: #4e647e;
 }
 .dash-confidence-heading b {
-  color: #fff;
-  font: 700 22px "Archivo", sans-serif;
-  letter-spacing: -0.04em;
+  color: #17263c;
+  font: 700 19px "Bricolage Grotesque", sans-serif;
+  letter-spacing: -0.03em;
   white-space: nowrap;
 }
 .dash-confidence-track {
-  height: 6px;
+  height: 5px;
   border-radius: 6px;
-  background: #ffffff48;
+  background: #dfe6f0;
   overflow: hidden;
-  margin: 8px 0 9px;
+  margin: 8px 0 10px;
 }
 .dash-confidence-track i {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: #a8f0df;
+  background: #315ce8;
 }
 .dash-confidence small {
   display: block;
-  line-height: 1.4;
+  font-size: 12px;
+  line-height: 1.45;
+  max-width: none;
 }
 .dash-panel {
   background: #fff;
-  border: 1px solid #e3eaf2;
-  border-radius: 18px;
-  padding: 30px 30px 23px;
-  margin-bottom: 20px;
-  box-shadow: 0 9px 35px rgba(31, 55, 85, 0.025);
+  border: 1px solid #dfe6ee;
+  border-radius: 15px;
+  padding: 30px 32px 25px;
+  margin-bottom: 22px;
 }
 .dash-panel-head {
   display: flex;
@@ -297,15 +302,14 @@
   align-items: flex-start;
 }
 .dash-panel h2 {
-  font:
-    700 clamp(23px, 2.2vw, 30px) "Archivo",
-    sans-serif;
-  letter-spacing: -0.055em;
-  margin: 10px 0 6px;
+  font: 700 clamp(25px, 2.2vw, 31px)/1.14 "Bricolage Grotesque", sans-serif;
+  letter-spacing: -0.045em;
+  margin: 8px 0 7px;
 }
 .dash-panel-head p {
-  color: #8996a7;
-  font-size: 12px;
+  color: #66788e;
+  font-size: 14px;
+  line-height: 1.5;
   margin: 0;
 }
 .dash-reveal,
@@ -318,8 +322,8 @@
   align-items: center;
   gap: 9px;
   color: #22344d;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   white-space: nowrap;
 }
 .dash-reveal > span {
@@ -347,10 +351,10 @@
 .dash-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 23px;
+  gap: 14px 23px;
   margin: 27px 0 14px;
-  font-size: 11px;
-  color: #697a90;
+  font-size: 12px;
+  color: #546a82;
 }
 .dash-legend span {
   display: flex;
@@ -386,20 +390,20 @@
   color: #fff;
   border-radius: 10px;
   box-shadow: 0 15px 35px #1c355b33;
-  padding: 13px 15px;
-  min-width: 220px;
-  font-size: 11px;
+  padding: 15px 17px;
+  min-width: 238px;
+  font-size: 12px;
 }
 .dash-tooltip strong {
   display: block;
-  font-size: 12px;
-  margin-bottom: 9px;
+  font-size: 14px;
+  margin-bottom: 11px;
 }
 .dash-tooltip span {
   display: flex;
   justify-content: space-between;
   gap: 18px;
-  margin: 5px 0;
+  margin: 7px 0;
   color: #b9c7da;
 }
 .dash-tooltip b {
@@ -419,11 +423,11 @@
   background: #f8faff;
   border: 1px solid #edf1f7;
   border-radius: 9px;
-  color: #8190a4;
-  font-size: 11px;
+  color: #5e7187;
+  font-size: 13px;
   line-height: 1.55;
-  padding: 11px 14px;
-  margin: 12px 0 0;
+  padding: 13px 15px;
+  margin: 15px 0 0;
 }
 .dash-chart-note svg {
   flex: 0 0 auto;
@@ -431,14 +435,14 @@
 }
 .dash-insights {
   display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 17px;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 18px;
 }
 .dash-insights article {
-  min-height: 254px;
+  min-height: 260px;
   background: #eaf4f2;
-  border-radius: 16px;
-  padding: 29px 30px;
+  border-radius: 15px;
+  padding: 30px 32px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -449,26 +453,24 @@
 }
 .dash-insights article > span,
 .dash-backtest article > span {
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  font-weight: 700;
-  color: #6f9993;
+  font-size: 13px;
+  letter-spacing: 0;
+  font-weight: 600;
+  color: #517e78;
 }
 .dash-insights article.dark > span {
   color: #91b3ce;
 }
 .dash-insights h2 {
-  font:
-    700 27px "Archivo",
-    sans-serif;
-  letter-spacing: -0.055em;
-  margin: 15px 0 11px;
+  font: 700 clamp(26px, 2.5vw, 32px)/1.15 "Bricolage Grotesque", sans-serif;
+  letter-spacing: -0.045em;
+  margin: 15px 0 12px;
 }
 .dash-insights p {
-  font-size: 13px;
-  line-height: 1.7;
-  color: #6a817f;
-  margin: 0 0 18px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #486b66;
+  margin: 0 0 22px;
   max-width: 490px;
 }
 .dash-insights article.dark p {
@@ -485,7 +487,7 @@
   border: 0;
   padding: 0;
   color: #087d78;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   margin-top: auto;
 }
@@ -495,42 +497,38 @@
 .dash-backtest {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: 18px;
+  margin-bottom: 22px;
 }
 .dash-backtest article {
   background: #fff;
   border: 1px solid #e3eaf2;
-  border-radius: 16px;
-  padding: 25px;
+  border-radius: 15px;
+  padding: 27px;
 }
 .dash-backtest article strong {
   display: block;
-  font:
-    700 37px "Archivo",
-    sans-serif;
-  letter-spacing: -0.06em;
-  margin: 17px 0 6px;
+  font: 700 38px "Bricolage Grotesque", sans-serif;
+  letter-spacing: -0.05em;
+  margin: 18px 0 8px;
   color: #315ce8;
 }
 .dash-backtest article h3 {
-  font:
-    700 15px "Archivo",
-    sans-serif;
-  margin: 0 0 10px;
+  font: 700 16px "Instrument Sans", sans-serif;
+  margin: 0 0 9px;
 }
 .dash-backtest article p {
-  font-size: 11px;
-  line-height: 1.6;
-  color: #8290a2;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #66788e;
   margin: 0;
 }
 .dash-heat-legend {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
-  color: #8190a0;
+  font-size: 12px;
+  color: #61758a;
 }
 .dash-heat-legend i {
   width: 10px;
@@ -546,8 +544,10 @@
   margin-left: 10px;
 }
 .dash-heatmap-scroll {
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
   margin-top: 25px;
+  padding-bottom: 4px;
 }
 .dash-heatmap {
   min-width: 700px;
@@ -591,18 +591,20 @@
   width: 100%;
   border-collapse: collapse;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
 }
 .dash-table-wrap th {
   text-align: left;
-  color: #8391a2;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  padding: 12px 10px;
+  color: #53677e;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  padding: 13px 12px;
   border-bottom: 1px solid #e3eaf0;
 }
 .dash-table-wrap td {
-  padding: 11px 10px;
+  padding: 12px;
   border-bottom: 1px solid #edf1f5;
   color: #465873;
 }
@@ -621,8 +623,9 @@
   justify-content: space-between;
   gap: 20px;
   padding: 32px 0;
-  color: #8190a2;
-  font-size: 11px;
+  color: #65778c;
+  font-size: 12px;
+  line-height: 1.5;
 }
 .dash-loading,
 .dash-error {
@@ -651,11 +654,13 @@
   }
   .dash-metrics,
   .dash-backtest {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .dash-metric.primary {
-    grid-column: 1/-1;
+  .dash-metric.allowance {
+    grid-column: 1 / -1;
+    min-height: 170px;
   }
+  .dash-backtest article:last-child { grid-column: 1 / -1; }
   .dash-insights {
     grid-template-columns: 1fr;
   }
@@ -669,23 +674,33 @@
     height: 68px;
   }
   .dash-main {
-    padding: 36px 16px;
+    padding: 36px 18px;
   }
   .dash-intro {
     margin-bottom: 32px;
   }
   .dash-intro h1 {
-    font-size: 43px;
+    font-size: clamp(38px, 9vw, 46px);
   }
   .dash-intro p {
-    font-size: 14px;
+    font-size: 15px;
   }
   .dash-metrics,
   .dash-backtest {
     grid-template-columns: 1fr;
   }
-  .dash-metric.primary {
+  .dash-metric,
+  .dash-metric.allowance {
     grid-column: auto;
+    min-height: 205px;
+    padding: 24px;
+  }
+  .dash-metric.forecast {
+    min-height: 240px;
+  }
+  .dash-backtest article:last-child { grid-column: auto; }
+  .dash-metric strong {
+    font-size: clamp(35px, 8.5vw, 43px);
   }
   .dash-toolbar {
     align-items: flex-end;
@@ -694,13 +709,13 @@
     gap: 18px;
   }
   .dash-tabs button {
-    font-size: 12px;
+    font-size: 13px;
   }
   .dash-cutoff {
     display: none;
   }
   .dash-panel {
-    padding: 22px 15px;
+    padding: 24px 18px;
   }
   .dash-panel-head {
     flex-direction: column;
@@ -710,7 +725,7 @@
     width: calc(100% + 20px);
   }
   .dash-legend {
-    gap: 10px;
+    gap: 10px 16px;
   }
   .dash-footer {
     display: block;

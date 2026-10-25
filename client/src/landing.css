@@ -5,7 +5,7 @@
   --blue: #315ce8;
   --line: #c8d1e4;
   --sun: #f4ba86;
-  --display-type: "Syne", sans-serif;
+  --display-type: "Bricolage Grotesque", sans-serif;
   --body-type: "Instrument Sans", sans-serif;
   background: #f6f7fb;
   color: var(--ink);
@@ -41,7 +41,7 @@ html { scroll-behavior: smooth; }
   font-family: var(--display-type);
   font-size: 25px;
   font-weight: 700;
-  letter-spacing: -.065em;
+  letter-spacing: -.055em;
   color: inherit;
 }
 .landing-mark { width: 34px; height: 34px; display: inline-flex; color: #c2c9f4; flex: none; }
@@ -120,28 +120,28 @@ html { scroll-behavior: smooth; }
   animation: heroEnter .9s cubic-bezier(.2,.7,.2,1) both;
 }
 .hero-context {
-  margin: 0 0 22px;
+  margin: 0 0 20px;
   color: #c9d1f5;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  letter-spacing: .025em;
+  letter-spacing: 0;
 }
 .hero-copy h1 {
   font-family: var(--display-type);
-  font-size: clamp(62px, 7.1vw, 112px);
+  font-size: clamp(59px, 6.8vw, 104px);
   font-weight: 700;
-  letter-spacing: -.068em;
-  line-height: .99;
+  letter-spacing: -.055em;
+  line-height: 1.02;
   text-wrap: pretty;
-  margin: 0 0 30px;
-  max-width: 1000px;
+  margin: 0 0 28px;
+  max-width: 1040px;
 }
 .hero-lead {
-  max-width: 570px;
+  max-width: 600px;
   margin: 0;
   color: #e1e3f3;
-  font-size: clamp(17px, 1.65vw, 21px);
-  line-height: 1.62;
+  font-size: clamp(18px, 1.65vw, 21px);
+  line-height: 1.55;
   text-wrap: pretty;
 }
 .hero-actions { display: flex; justify-content: flex-start; align-items: center; gap: 26px; flex-wrap: wrap; margin-top: 37px; }
@@ -218,15 +218,15 @@ html { scroll-behavior: smooth; }
   z-index: 1;
 }
 .preview-kicker {
-  font-size: 13px;
+  font-size: 14px;
   color: #aab9cc;
 }
 .preview-heading h2 {
   font-family: var(--display-type);
   font-weight: 700;
-  letter-spacing: -0.055em;
-  font-size: 25px;
-  line-height: 1.15;
+  letter-spacing: -0.045em;
+  font-size: 27px;
+  line-height: 1.14;
   margin: 8px 0 0;
 }
 .preview-time {
@@ -285,7 +285,7 @@ html { scroll-behavior: smooth; }
   align-items: center;
   justify-content: space-between;
   color: #bac8d9;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
 }
 .preview-chart {
@@ -301,7 +301,7 @@ html { scroll-behavior: smooth; }
   stroke-dasharray: 3 6;
 }
 .preview-axis-label {
-  font-size: 11px;
+  font-size: 12px;
   fill: #8ea1ba;
   font-family: var(--body-type);
 }
@@ -361,7 +361,7 @@ html { scroll-behavior: smooth; }
   flex-wrap: wrap;
   gap: 20px;
   color: #aebed0;
-  font-size: 12px;
+  font-size: 13px;
 }
 .preview-chart-legend span {
   display: inline-flex;
@@ -388,12 +388,12 @@ html { scroll-behavior: smooth; }
   justify-content: space-between;
   align-items: center;
   color: #aebed0;
-  font-size: 12px;
+  font-size: 13px;
   margin-top: 19px;
 }
 .preview-scrubber-label strong {
   color: #edf4ff;
-  font-size: 12px;
+  font-size: 13px;
 }
 .preview-scrubber {
   display: block;
@@ -414,7 +414,7 @@ html { scroll-behavior: smooth; }
 .preview-values > div {
   flex: 1;
   min-width: 0;
-  padding: 13px 16px;
+  padding: 15px 17px;
   border-right: 1px solid #354861;
 }
 .preview-values > div:last-child {
@@ -423,16 +423,16 @@ html { scroll-behavior: smooth; }
 .preview-values span {
   display: block;
   color: #aebed0;
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
 }
 .preview-values strong {
   display: block;
   font-family: var(--display-type);
   font-weight: 700;
-  font-size: 24px;
-  letter-spacing: -0.055em;
-  margin-top: 4px;
+  font-size: 27px;
+  letter-spacing: -0.045em;
+  margin-top: 6px;
 }
 .preview-values small {
   font-family: var(--body-type);
@@ -445,7 +445,7 @@ html { scroll-behavior: smooth; }
   color: #d6c2ff;
 }
 .preview-disclaimer {
-  font-size: 11px;
+  font-size: 12px;
   color: #8194aa;
   margin: 13px 0 0;
 }
@@ -460,8 +460,8 @@ html { scroll-behavior: smooth; }
 .problem-heading h2, .product-intro h2, .proof-copy h2, .close-content h2 {
   font-family: var(--display-type);
   font-weight: 700;
-  letter-spacing: -.06em;
-  line-height: 1.1;
+  letter-spacing: -.05em;
+  line-height: 1.12;
   margin: 0;
   text-wrap: balance;
 }
@@ -499,7 +499,7 @@ html { scroll-behavior: smooth; }
 .proof-copy > a:hover { text-decoration: underline; text-underline-offset: 4px; }
 .proof-figures { max-width: 520px; width: 100%; justify-self: start; border-top: 1px solid #c2cbe2; }
 .proof-figures > div { border-bottom: 1px solid #c2cbe2; padding: 21px 0; display: flex; align-items: baseline; justify-content: space-between; gap: 20px; }
-.proof-figures strong { font-family: var(--display-type); font-weight: 700; letter-spacing: -.07em; font-size: clamp(50px, 5vw, 72px); line-height: 1; white-space: nowrap; }
+.proof-figures strong { font-family: var(--display-type); font-weight: 700; letter-spacing: -.05em; font-size: clamp(50px, 5vw, 72px); line-height: 1; white-space: nowrap; }
 .proof-figures strong small { font-size: .46em; letter-spacing: -.04em; }
 .proof-figures span { color: #5a6680; text-align: right; font-size: 14px; }
 .proof-figures > p { color: #67728b; font-size: 14px; line-height: 1.6; margin: 19px 0 0; }
@@ -531,7 +531,7 @@ html { scroll-behavior: smooth; }
   .proof-figures { margin-top: 32px; max-width: 680px; }
 }
 @media (max-width: 650px) {
-  .landing-hero { min-height: 860px; }
+  .landing-hero { min-height: 820px; }
   .landing-header { height: 75px; }
   .landing-header nav { gap: 0; }
   .landing-header nav > a:not(.header-dashboard-link) { display: none; }
@@ -539,17 +539,17 @@ html { scroll-behavior: smooth; }
   .landing-brand { font-size: 22px; }
   .landing-mark { width: 30px; height: 30px; }
   .hero-copy { margin-top: clamp(60px, 10vh, 104px); }
-  .hero-context { font-size: 12px; margin-bottom: 20px; }
-  .hero-copy h1 { font-size: clamp(48px, 11.7vw, 72px); line-height: 1.02; margin-bottom: 19px; }
-  .hero-lead { font-size: 16px; line-height: 1.55; }
+  .hero-context { font-size: 13px; margin-bottom: 17px; }
+  .hero-copy h1 { font-size: clamp(46px, 10.7vw, 67px); line-height: 1.04; margin-bottom: 22px; }
+  .hero-lead { font-size: 16px; line-height: 1.58; }
   .hero-actions { margin-top: 28px; gap: 19px; }
   .landing-primary-cta { width: 100%; justify-content: space-between; }
-  .hero-bottom { padding-bottom: 19px; font-size: 10px; }
+  .hero-bottom { padding-bottom: 20px; font-size: 11px; }
   .hero-bottom > span { max-width: 180px; line-height: 1.4; }
   .hero-bottom a { gap: 2px; }
   .wind-scene { height: 43%; width: 180%; left: -65%; }
   .landing-problem { padding-top: 84px; padding-bottom: 90px; }
-  .problem-heading h2, .product-intro h2, .proof-copy h2 { font-size: clamp(42px, 10vw, 60px); }
+  .problem-heading h2, .product-intro h2, .proof-copy h2 { font-size: clamp(39px, 9vw, 57px); }
   .problem-heading > p, .product-intro > p, .proof-copy > p { font-size: 17px; }
   .problem-sequence { margin-top: 33px; padding-top: 0; }
   .sequence-line { top: 6px; bottom: 90px; }
@@ -559,14 +559,14 @@ html { scroll-behavior: smooth; }
   .landing-product { padding-top: 85px; padding-bottom: 80px; }
   .product-intro { gap: 24px; margin-bottom: 34px; }
   .product-preview .decision-preview { padding: 19px 17px 15px; }
-  .preview-heading h2, .product-preview .preview-heading h2 { font-size: 21px; }
-  .preview-time { font-size: 10px; padding: 5px 7px; }
+  .preview-heading h2, .product-preview .preview-heading h2 { font-size: 22px; }
+  .preview-time { font-size: 11px; padding: 6px 8px; }
   .preview-switch { margin: 22px 0 16px; }
-  .preview-switch button { padding: 7px 9px; font-size: 11px; }
-  .preview-chart-legend { gap: 10px; font-size: 11px; }
-  .preview-values > div { padding: 10px 8px; }
-  .preview-values span { font-size: 10px; white-space: normal; min-height: 24px; }
-  .preview-values strong { font-size: 19px; }
+  .preview-switch button { padding: 8px 10px; font-size: 12px; }
+  .preview-chart-legend { gap: 10px 15px; font-size: 12px; }
+  .preview-values > div { padding: 12px 10px; }
+  .preview-values span { font-size: 11px; white-space: normal; min-height: 29px; }
+  .preview-values strong { font-size: 20px; }
   .landing-proof { padding-top: 90px; padding-bottom: 100px; }
   .proof-figures { margin-top: 18px; }
   .proof-figures strong { font-size: 54px; }

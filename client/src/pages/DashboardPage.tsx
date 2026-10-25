@@ -101,13 +101,13 @@ function WindChart({ hours, actual }: { hours: Hour[]; actual: boolean }) {
             tickLine={false}
             axisLine={false}
             interval={3}
-            tick={{ fill: "#8290a4", fontSize: 11 }}
+            tick={{ fill: "#61758c", fontSize: 12 }}
             dy={8}
           />
           <YAxis
             tickLine={false}
             axisLine={false}
-            tick={{ fill: "#8290a4", fontSize: 11 }}
+            tick={{ fill: "#61758c", fontSize: 12 }}
             tickFormatter={(v) => `${Math.round(v / 1000)}k`}
           />
           <Tooltip
@@ -329,9 +329,7 @@ export function DashboardPage() {
       <main className="dash-main">
         <section className="dash-intro">
           <div>
-            <span className="dash-kicker">
-              DECISION INTELLIGENCE / JANUARY 2026
-            </span>
+            <span className="dash-kicker">January 2026 decision review</span>
             <h1>
               Plan for tomorrow's wind
               <br />
@@ -344,7 +342,7 @@ export function DashboardPage() {
           </div>
           <div className="dash-date-card">
             <span>
-              <CalendarDays size={16} /> BUYING DECISION
+              <CalendarDays size={16} /> Buying decision
             </span>
             <label htmlFor="decision-date">Decision date</label>
             <select
@@ -392,8 +390,8 @@ export function DashboardPage() {
           <span className="dash-cutoff">
             <i />{" "}
             {mode === "detailed" || actual
-              ? "09:00 FORECAST + AFTER-DELIVERY REVIEW"
-              : "AS KNOWN AT 09:00 GMT"}
+              ? "09:00 forecast + after-delivery review"
+              : "As known at 09:00 GMT"}
           </span>
         </div>
         {error && (
@@ -407,12 +405,12 @@ export function DashboardPage() {
         {decision && (
           <>
             <section className="dash-metrics" aria-label="Decision summary">
-              <article className="dash-metric primary">
-                <span>EXPECTED WIND GENERATION</span>
+              <article className="dash-metric forecast">
+                <span>Expected wind generation</span>
                 <strong>{gwh(decision.forecast_mwh)}</strong>
                 <div className="dash-confidence">
                   <div className="dash-confidence-heading">
-                    <span>FORECAST CONFIDENCE SCORE</span>
+                    <span>Historical accuracy score</span>
                     <b>
                       {decision.confidence_score == null
                         ? "—"
@@ -422,7 +420,7 @@ export function DashboardPage() {
                   <div
                     className="dash-confidence-track"
                     role="meter"
-                    aria-label="Historical forecast confidence score"
+                    aria-label="Historical accuracy score"
                     aria-valuemin={0}
                     aria-valuemax={100}
                     aria-valuenow={decision.confidence_score ?? undefined}
@@ -440,16 +438,16 @@ export function DashboardPage() {
                   </small>
                 </div>
               </article>
-              <article className="dash-metric">
-                <span>PLANNING WIND LEVEL</span>
+              <article className="dash-metric primary">
+                <span>Planning wind level</span>
                 <strong>{gwh(decision.downside_mwh)}</strong>
                 <small>
-                  A cautious wind amount based on the previous {decision.risk.lookback_days} days.
+                  A cautious level from the previous {decision.risk.lookback_days} completed days.
                   Actual wind can still be lower.
                 </small>
               </article>
-              <article className="dash-metric">
-                <span>ALLOWANCE FOR LESS WIND</span>
+              <article className="dash-metric allowance">
+                <span>Allowance for less wind</span>
                 <strong>
                   {gwh(
                     decision.downside_mwh == null
@@ -466,7 +464,7 @@ export function DashboardPage() {
             <section className="dash-panel">
               <div className="dash-panel-head">
                 <div>
-                  <span className="dash-kicker">DELIVERY PROFILE</span>
+                  <span className="dash-kicker">Delivery profile</span>
                   <h2>
                     {mode === "nutshell"
                       ? "The forecast, with room for error."
@@ -515,7 +513,7 @@ export function DashboardPage() {
             {mode === "nutshell" ? (
               <section className="dash-insights">
                 <article className="dark">
-                  <span>WHAT THIS MEANS FOR THE BUYING DESK</span>
+                  <span>For the buying desk</span>
                   <h2>Allow for less wind before committing.</h2>
                   <p>
                     Use the planning wind level alongside demand and existing
@@ -527,7 +525,7 @@ export function DashboardPage() {
                   </button>
                 </article>
                 <article>
-                  <span>AFTER DELIVERY · EVALUATION</span>
+                  <span>After delivery</span>
                   <h2>
                     {actual
                       ? gwh(decision.actual_mwh)
@@ -547,7 +545,7 @@ export function DashboardPage() {
               <>
                 <section className="dash-backtest">
                   <article>
-                    <span>JANUARY BACKTEST</span>
+                    <span>January backtest</span>
                     <strong>
                       {overview?.downside_coverage == null
                         ? "—"
@@ -563,7 +561,7 @@ export function DashboardPage() {
                     </p>
                   </article>
                   <article>
-                    <span>REALIZED ACCURACY</span>
+                    <span>Realized accuracy</span>
                     <strong>
                       {overview?.january_mae_mw == null
                         ? "—"
@@ -576,7 +574,7 @@ export function DashboardPage() {
                     </p>
                   </article>
                   <article>
-                    <span>SYSTEMATIC DIRECTION</span>
+                    <span>Systematic direction</span>
                     <strong>
                       {overview?.january_bias_mw == null
                         ? "—"
@@ -594,7 +592,7 @@ export function DashboardPage() {
                     <div className="dash-panel-head">
                       <div>
                         <span className="dash-kicker">
-                          31 DECISIONS × 24 HOURS
+                          31 decisions × 24 hours
                         </span>
                         <h2>Where the forecast missed.</h2>
                         <p>
@@ -617,7 +615,7 @@ export function DashboardPage() {
                 <section className="dash-panel">
                   <div className="dash-panel-head">
                     <div>
-                      <span className="dash-kicker">AUDIT TRAIL</span>
+                      <span className="dash-kicker">Audit trail</span>
                       <h2>The numbers behind the line.</h2>
                       <p>
                         Forecasts are selected separately for every delivery
