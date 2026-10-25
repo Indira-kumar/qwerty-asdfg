@@ -33,9 +33,10 @@ type Decision = {
   decision_date: string;
   delivery_date: string;
   forecast_mwh: number;
+  confidence_score: number | null;
   downside_mwh: number | null;
   actual_mwh: number | null;
-  risk: { completed_days: number; baseline: Metrics | null };
+  risk: { completed_days: number; coverage_target: number; historical_daily_mape: number | null; baseline: Metrics | null };
   realized: Metrics | null;
   hours: Hour[];
 };
@@ -45,6 +46,7 @@ type Overview = {
   january_mae_mw: number | null;
   january_bias_mw: number | null;
   downside_coverage: number | null;
+  evaluated_days: number;
   evaluated_hours: number;
 };
 
@@ -113,7 +115,7 @@ function WindChart({ hours, actual }: { hours: Hour[]; actual: boolean }) {
                     Forecast <b>{mw(h.forecast_mw)}</b>
                   </span>
                   <span>
-                    Downside floor <b>{mw(h.downside_mw)}</b>
+                    Hourly planning level <b>{mw(h.downside_mw)}</b>
                   </span>
                   {actual && (
                     <>
@@ -324,13 +326,13 @@ export function DashboardPage() {
               DECISION INTELLIGENCE / JANUARY 2026
             </span>
             <h1>
-              Plan around the wind
+              Plan for tomorrow's wind
               <br />
-              <em>you can count on.</em>
+              <em>with the risk in view.</em>
             </h1>
             <p>
               Every forecast is frozen at 09:00 GMT, before the day-ahead buying
-              decision. See the estimate, historical downside, and measured
+              decision. See the estimate, planning level, and measured
               outcome separately.
             </p>
           </div>
@@ -402,12 +404,23 @@ export function DashboardPage() {
               <article className="dash-metric primary">
                 <span>EXPECTED WIND GENERATION</span>
                 <strong>{gwh(decision.forecast_mwh)}</strong>
-                <small>Frozen day-ahead forecast</small>
+                <div className="dash-confidence">
+                  <div className="dash-confidence-heading">
+                    <span>FORECAST CONFIDENCE SCORE</span>
+                    <b>{decision.confidence_score == null ? "—" : `${decision.confidence_score}/100`}</b>
+                  </div>
+                  <div className="dash-confidence-track" role="meter" aria-label="Historical forecast confidence score" aria-valuemin={0} aria-valuemax={100} aria-valuenow={decision.confidence_score ?? undefined}>
+                    <i style={{ width: `${decision.confidence_score ?? 0}%` }} />
+                  </div>
+                  <small>
+                    100 minus {decision.risk.historical_daily_mape == null ? "—" : `${Math.round(decision.risk.historical_daily_mape * 100)}%`} average daily error across {decision.risk.completed_days} prior days. An accuracy score, not a delivery probability.
+                  </small>
+                </div>
               </article>
               <article className="dash-metric">
-                <span>HISTORICAL DOWNSIDE FLOOR</span>
+                <span>PLANNING WIND LEVEL</span>
                 <strong>{gwh(decision.downside_mwh)}</strong>
-                <small>Sum of hourly downside floors</small>
+                <small>{Math.round(decision.risk.coverage_target * 100)}% historical daily coverage target · not guaranteed</small>
               </article>
               <article className="dash-metric">
                 <span>TYPICAL HISTORICAL MISS</span>
@@ -456,7 +469,7 @@ export function DashboardPage() {
                   <i className="band" /> Historical error range
                 </span>
                 <span>
-                  <i className="line amber" /> Downside floor
+                  <i className="line amber" /> Hourly planning level
                 </span>
                 {actual && (
                   <span>
@@ -467,18 +480,19 @@ export function DashboardPage() {
               <WindChart hours={decision.hours} actual={actual} />
               <p className="dash-chart-note">
                 <Info size={15} /> The band uses same-hour errors from the
-                previous 56 completed delivery days. Its lower edge is a
-                planning indicator, not a guaranteed minimum.
+                previous 56 completed delivery days. The daily planning level
+                uses daily errors, so it differs from the sum of the hourly
+                line. Neither is a guaranteed minimum.
               </p>
             </section>
             {mode === "nutshell" ? (
               <section className="dash-insights">
                 <article className="dark">
                   <span>WHAT THIS MEANS FOR THE BUYING DESK</span>
-                  <h2>See the downside before committing.</h2>
+                  <h2>Allow for less wind before committing.</h2>
                   <p>
-                    The difference between expected wind and its historical
-                    downside is{" "}
+                    The gap between expected wind and the daily planning level
+                    is{" "}
                     <b>
                       {gwh(
                         decision.forecast_mwh - (decision.downside_mwh ?? 0),
@@ -518,11 +532,10 @@ export function DashboardPage() {
                         ? "—"
                         : `${Math.round(overview.downside_coverage * 100)}%`}
                     </strong>
-                    <h3>Hours above the downside floor</h3>
-                    <p>
-                      Observed coverage over {overview?.evaluated_hours ?? "—"}{" "}
-                      delivery hours. The historical 90th-percentile floor
-                      suggests roughly 90% coverage if errors remain similar.
+                  <h3>Days above the planning level</h3>
+                  <p>
+                      Observed coverage over {overview?.evaluated_days ?? "—"}{" "}
+                      delivery days. The level targets {Math.round(decision.risk.coverage_target * 100)}% coverage based on prior daily errors; it does not guarantee delivery.
                     </p>
                   </article>
                   <article>
@@ -600,7 +613,7 @@ export function DashboardPage() {
                         <tr>
                           <th>Hour UTC</th>
                           <th>Forecast</th>
-                          <th>Downside</th>
+                          <th>Hourly planning level</th>
                           <th>Actual</th>
                           <th>Signed error</th>
                           <th>Published UTC</th>
