@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, ArrowUpRight, MoveRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import "../landing.css";
 
@@ -50,6 +50,44 @@ function WindwardMark() {
         />
       </svg>
     </span>
+  );
+}
+
+function WindScene() {
+  const turbines = [
+    { x: 144, y: 494, size: 0.67, delay: "-6s" },
+    { x: 335, y: 476, size: 0.83, delay: "-11s" },
+    { x: 1136, y: 485, size: 0.72, delay: "-8s" },
+    { x: 1326, y: 501, size: 0.55, delay: "-17s" },
+  ];
+
+  return (
+    <svg className="wind-scene" viewBox="0 0 1440 650" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <defs>
+        <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+          <stop stopColor="#2c527a" />
+          <stop offset="1" stopColor="#071b34" />
+        </linearGradient>
+        <linearGradient id="horizon" x1="0" y1="0" x2="0" y2="1">
+          <stop stopColor="#9fc7ee" stopOpacity=".47" />
+          <stop offset="1" stopColor="#9fc7ee" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <ellipse cx="720" cy="512" rx="610" ry="112" fill="url(#horizon)" />
+      <path d="M0 511C173 500 330 503 468 510c171 8 323-6 469-2 194 6 321 5 503-4v146H0Z" fill="url(#sea)" />
+      <path d="M0 516c146 13 278 4 424 12 162 9 345-4 526 3 166 7 327-9 490 2" fill="none" stroke="#8db3dc" strokeOpacity=".27" strokeWidth="2" />
+      <path d="M0 557c241-8 381 12 612 4 278-10 516 2 828-6M0 595c247 6 513-11 734 0 209 10 420 0 706 8" fill="none" stroke="#8db3dc" strokeOpacity=".09" strokeWidth="2" />
+      {turbines.map(({ x, y, size, delay }) => (
+        <g key={x} transform={`translate(${x} ${y}) scale(${size})`} className="scene-turbine">
+          <path d="M0 0 0-154" stroke="#dcecff" strokeWidth="4" />
+          <path d="M-12 0h24" stroke="#b4cdeb" strokeWidth="4" />
+          <g className="scene-rotor" style={{ animationDelay: delay }}>
+            <path d="M0-154 2-216 6-221 4-172ZM0-154l52 32 4 7-43-31ZM0-154l-55 34-7 1 47-35Z" fill="#e3f0ff" />
+          </g>
+          <circle cy="-154" r="5" fill="#f9fcff" />
+        </g>
+      ))}
+    </svg>
   );
 }
 
@@ -243,136 +281,116 @@ function DecisionPreview() {
 export function LandingPage() {
   return (
     <div className="landing-page">
-      <header className="landing-header">
-        <Link className="landing-brand" to="/" aria-label="Windward home">
-          <WindwardMark />
-          <span>windward</span>
-        </Link>
-        <nav aria-label="Main navigation">
-          <a href="#how-it-works">How it works</a>
-          <Link className="header-dashboard-link" to="/dashboard">
-            Open dashboard <ArrowUpRight size={17} strokeWidth={2} />
-          </Link>
-        </nav>
-      </header>
       <main>
         <section className="landing-hero" aria-labelledby="landing-title">
+          <div className="hero-sky" aria-hidden="true" />
+          <WindScene />
+          <header className="landing-header">
+            <Link className="landing-brand" to="/" aria-label="Windward home">
+              <WindwardMark />
+              <span>windward</span>
+            </Link>
+            <nav aria-label="Main navigation">
+              <a href="#problem">The problem</a>
+              <a href="#product">The product</a>
+              <Link className="header-dashboard-link" to="/dashboard">
+                Explore pilot <ArrowUpRight size={17} strokeWidth={2} />
+              </Link>
+            </nav>
+          </header>
           <div className="hero-copy">
-            <div className="hero-context">
-              <span className="hero-context-line" /> Wind intelligence for GB
-              day-ahead decisions
-            </div>
-            <h1 id="landing-title">
-              Know the wind
-              <br />
-              before you buy<span className="hero-period">.</span>
-            </h1>
-            <p>
-              See the forecast available at decision time, understand its
-              historical downside, and buy with a clearer picture of the risk.
+            <p className="hero-context">For the desk buying tomorrow's power</p>
+            <h1 id="landing-title">You have to buy power before you know the wind.</h1>
+            <p className="hero-lead">
+              Windward freezes the forecast available at your 09:00 GMT cutoff
+              and shows how far similar forecasts have overcalled wind. Make
+              tomorrow's wind assumption with the downside in view.
             </p>
             <div className="hero-actions">
               <Link className="landing-primary-cta" to="/dashboard">
-                Explore January decisions{" "}
-                <ArrowUpRight size={20} strokeWidth={2} />
+                Explore the January pilot <ArrowUpRight size={19} />
               </Link>
-              <a className="landing-text-link" href="#how-it-works">
-                See how it works <ArrowRight size={18} />
+              <a className="landing-text-link" href="#problem">
+                See the buying problem <ArrowRight size={17} />
               </a>
             </div>
-            <div className="hero-footnote">
-              <span className="footnote-line" /> Built around Elexon wind
-              forecasts and actual generation
-            </div>
           </div>
-          <div className="hero-visual">
+          <div className="hero-bottom">
+            <span>Great Britain wind · Elexon data · January 2026 decisions</span>
+            <a href="#problem" aria-label="Scroll to the buying problem">
+              Scroll to explore <ChevronDown size={18} />
+            </a>
+          </div>
+        </section>
+        <section className="landing-problem" id="problem" aria-labelledby="problem-title">
+          <div className="problem-heading">
+            <span className="section-index">The buying problem</span>
+            <h2 id="problem-title">A single wind number can hide the shortfall you need to cover.</h2>
+            <p>
+              Your consumers will need power tomorrow. Wind generation will only
+              be known tomorrow. If the forecast is high and wind underdelivers,
+              the gap still has to be served.
+            </p>
+          </div>
+          <div className="problem-sequence" aria-label="Decision sequence">
+            <div className="sequence-line" aria-hidden="true" />
+            <article>
+              <span className="sequence-time">09:00 · decision day</span>
+              <h3>Commit with what is known.</h3>
+              <p>Use the latest Elexon forecast actually published by the cutoff, not a later revision that makes the decision look easier in hindsight.</p>
+            </article>
+            <article>
+              <span className="sequence-time">Before the purchase</span>
+              <h3>Allow for the miss.</h3>
+              <p>See a downside wind view based on forecast errors from the previous 56 completed delivery days, hour by hour.</p>
+            </article>
+            <article>
+              <span className="sequence-time">After delivery</span>
+              <h3>Find out what happened.</h3>
+              <p>Compare the frozen forecast with metered wind generation. Understand the error without letting tomorrow's actuals into today's decision.</p>
+            </article>
+          </div>
+        </section>
+        <section className="landing-product" id="product" aria-labelledby="product-title">
+          <div className="product-intro">
+            <div>
+              <span className="section-index">The buying view</span>
+              <h2 id="product-title">See the forecast. See the downside. Then reveal the outcome.</h2>
+            </div>
+            <p>
+              A point forecast tells you what might arrive. The historical
+              downside tells you how far similar forecasts have overcalled wind.
+              Move through the delivery day below, then reveal actual generation.
+            </p>
+          </div>
+          <div className="product-preview">
             <DecisionPreview />
           </div>
         </section>
-        <section
-          className="landing-method"
-          id="how-it-works"
-          aria-labelledby="method-title"
-        >
-          <div className="method-intro">
-            <p className="section-index">The decision, made clearer</p>
-            <h2 id="method-title">
-              From a forecast
-              <br />
-              to a buying view.
-            </h2>
+        <section className="landing-proof" aria-labelledby="proof-title">
+          <div className="proof-copy">
+            <span className="section-index">The January pilot</span>
+            <h2 id="proof-title">Every wind assumption should come with its evidence.</h2>
             <p>
-              Wind moves. Your decision has a deadline. Windward keeps the
-              forecast, its uncertainty, and the eventual result in their proper
-              order.
+              Explore every purchase decision from 1–31 January 2026. Inspect the
+              forecast available at 09:00, the downside estimate available then,
+              and the measured error after delivery.
             </p>
+            <Link to="/dashboard">Inspect the decision history <ArrowRight size={18} /></Link>
           </div>
-          <div className="method-steps">
-            <article>
-              <div className="step-top">
-                <span
-                  className="step-symbol step-symbol-blue"
-                  aria-hidden="true"
-                >
-                  ↗
-                </span>
-                <span className="step-number">01</span>
-              </div>
-              <h3>Freeze the right forecast</h3>
-              <p>
-                See the latest wind forecast published by 09:00 GMT for the next
-                delivery day.
-              </p>
-            </article>
-            <article>
-              <div className="step-top">
-                <span
-                  className="step-symbol step-symbol-amber"
-                  aria-hidden="true"
-                >
-                  ≈
-                </span>
-                <span className="step-number">02</span>
-              </div>
-              <h3>Make room for error</h3>
-              <p>
-                Compare it with the misses seen over the previous 56 completed
-                delivery days.
-              </p>
-            </article>
-            <article>
-              <div className="step-top">
-                <span
-                  className="step-symbol step-symbol-teal"
-                  aria-hidden="true"
-                >
-                  ✓
-                </span>
-                <span className="step-number">03</span>
-              </div>
-              <h3>Learn from the outcome</h3>
-              <p>
-                After delivery, compare the frozen forecast with actual wind
-                generation, hour by hour.
-              </p>
-            </article>
+          <div className="proof-figures">
+            <div><strong>31</strong><span>decision dates</span></div>
+            <div><strong>2.04 <small>GW</small></strong><span>mean absolute hourly error</span></div>
+            <div><strong>89%</strong><span>of hours at or above the downside floor</span></div>
+            <p>Measured across 744 delivery hours. Historical risk uses only prior completed days. The downside floor is an empirical planning indicator, not a guarantee for any given hour or day.</p>
           </div>
         </section>
         <section className="landing-close" aria-labelledby="close-title">
-          <div className="close-grid" aria-hidden="true" />
           <div className="close-content">
-            <span>January 2026 decision window</span>
-            <h2 id="close-title">
-              Every decision has a forecast.
-              <br />
-              Now it has context.
-            </h2>
-            <Link to="/dashboard">
-              Open the dashboard <MoveRight size={22} />
-            </Link>
-          </div>
-          <div className="close-mark" aria-hidden="true">
-            <WindwardMark />
+            <span>Ready to examine the buying decision?</span>
+            <h2 id="close-title">Make the wind assumption one you can explain.</h2>
+            <p>Start with the January pilot. Select a decision date, inspect each delivery hour, and see how the forecast held up.</p>
+            <Link to="/dashboard">Explore the dashboard <ArrowUpRight size={19} /></Link>
           </div>
         </section>
       </main>
@@ -381,8 +399,8 @@ export function LandingPage() {
           <WindwardMark />
           <span>windward</span>
         </div>
-        <p>Wind forecast intelligence for day-ahead decisions.</p>
-        <span>Great Britain · January 2026</span>
+        <p>Windward informs the wind input to a purchase. Total volume still depends on demand, contracts, and other generation.</p>
+        <span>Great Britain · January 2026 pilot</span>
       </footer>
     </div>
   );
