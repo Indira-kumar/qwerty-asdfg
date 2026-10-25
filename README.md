@@ -1,6 +1,6 @@
 # Windward
 
-Wind decision support for a Great Britain electricity buyer. The app shows the latest Elexon wind forecast available at **09:00 GMT** on each purchase decision date in **1–31 January 2026**, its historical downside, and the observed result after delivery. The final decision on 31 January concerns delivery on 1 February.
+Wind decision support for a Great Britain electricity buyer. The app shows the latest Elexon wind forecast available at **09:00 GMT** on each purchase decision date in **1–31 January 2026**, a historical confidence score and planning wind level, and the observed result after delivery. The final decision on 31 January concerns delivery on 1 February.
 
 ## Run locally
 
@@ -29,7 +29,9 @@ Open `http://localhost:8088` for the app and `http://localhost:8000/docs` for th
 
 The snapshot builder uses only [WINDFOR](https://bmrs.elexon.co.uk/api-documentation/endpoint/datasets/WINDFOR/stream) and [FUELHH/WIND](https://bmrs.elexon.co.uk/api-documentation/endpoint/datasets/FUELHH/stream). Regenerate it with `cd api && python -m app.services.prepare_data`. The checked-in snapshot keeps the pilot fast and repeatable.
 
-For each delivery hour, the service selects the latest forecast with `publishTime <= 09:00 GMT` on the previous day's decision date. It averages the two half-hour actual MW values into one hourly actual MW value. Historical signed error is `forecast − actual`; positive error means less wind than forecast. The downside floor subtracts the 90th percentile of **overforecast** error for the same hour from the frozen forecast, using the prior 56 completed delivery days. The daily downside figure sums those hourly floors; it is not a 90th-percentile bound for daily energy. January actuals evaluate the forecast after delivery; they never enter that decision's pre-buy risk estimate. The detailed view reports MAE, bias, and observed downside coverage (89% across 744 January delivery hours). The floor is an empirical planning indicator, not a guaranteed 90% probability for any particular day; hourly errors are correlated.
+For each delivery hour, the service selects the latest forecast with `publishTime <= 09:00 GMT` on the previous day's decision date. It averages the two half-hour actual MW values into one hourly actual MW value. Historical signed error is `forecast − actual`; positive error means less wind than forecast. Using the prior 56 completed delivery days, the daily planning wind level subtracts the 75th percentile of **daily signed errors** from the frozen daily forecast. The chart uses same-hour 75th-percentile errors for its lower line. These two calculations differ because summing hourly lower estimates overstates the daily buffer. The default 75% is a historical coverage target, not a guarantee. In the January backtest, actual daily wind exceeded the planning level on 22 of 31 days (71%).
+
+The confidence score is `round(100 × (1 − historical daily MAPE))`, clipped to 0–100, where MAPE is the mean absolute percentage error of daily energy over the same 56 prior days. A score of 86/100 means 14% average daily error in that history; it is **not** an 86% probability of meeting the forecast or planning level. January actuals evaluate the forecast only after delivery and never enter that decision's planning level or score. The detailed view also reports hourly MAE and bias.
 
 FUELHH covers metered Great Britain wind, so it is not a complete measure of UK renewable generation. The app does not calculate total power to buy because demand, existing contracted supply, and other generation are outside the two permitted feeds.
 
