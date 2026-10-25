@@ -69,3 +69,6 @@ Currently the prediction optimizes for accuracy of wind energy generation, but t
 
 ### Note
 `GPT 6 sol` model was used for coding(especially the landing page in the UI).
+
+### Live URL
+The deployed app can be found at [https://qwerty-asdfg-client.vercel.app](https://qwerty-asdfg-client.vercel.app)
