@@ -23,11 +23,12 @@ Decisions made on the app are documented at: [DECISIONS.md](./DECISIONS.md)
 | --- | --- |
 | `client/src/pages/`, `client/src/landing.css` | Landing page, dashboard, and visual styles |
 | `api/app/adapters/` | Source interface and Elexon adapter |
-| `api/app/services/` | Snapshot preparation, decision calculations, comparison |
+| `api/app/services/` | Live data preparation, decision calculations, method comparison |
 | `api/app/routers/`, `api/app/schemas/` | HTTP routes and response models |
 | `api/app/settings.py`, `api/.env.example` | Validated server configuration and defaults |
 | `api/tests/` | Cutoff, alignment, calculation, and leakage checks |
-| `hld.png`, `docker-compose.yml` | Initial HLD and local deployment |
+| `assets/hld.png`, `DECISIONS.md` | Architecture diagram and design decisions |
+| `docker-compose.yml` | Local client and API setup |
 
 ## Local setup
 
