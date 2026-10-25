@@ -15,6 +15,7 @@ class RiskContext(BaseModel):
     completed_days: int
     method: str
     coverage_target: float
+    planning_error_rate: float | None
     historical_daily_mape: float | None
     baseline: Metrics | None
 
