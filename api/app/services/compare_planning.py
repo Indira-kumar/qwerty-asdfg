@@ -1,4 +1,4 @@
-"""Reproduce the December calibration and January holdout comparison."""
+"""Reproduce the December calibration and January backtest comparison."""
 
 from datetime import date, timedelta
 
@@ -51,7 +51,7 @@ if __name__ == "__main__":
         print(name)
         for label, first, last in [
             ("December validation", date(2025, 12, 1), date(2025, 12, 31)),
-            ("January holdout", date(2026, 1, 1), date(2026, 1, 31)),
+            ("January backtest", date(2026, 1, 1), date(2026, 1, 31)),
         ]:
             count, covered, buffer, shortfall = evaluate(first, last, days, quantile, relative)
             print(f"  {label}: {covered}/{count} days covered; {buffer:.1f} GWh mean buffer; {shortfall:.1f} GWh mean shortfall")
