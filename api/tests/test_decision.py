@@ -3,7 +3,7 @@ import unittest
 from datetime import date
 from unittest.mock import patch
 
-from app.services.decision import build_decision, build_overview, load_snapshot, planning_level
+from app.services.decision_service import build_decision, build_overview, load_snapshot, planning_level
 from app.services.prepare_data import freeze_forecast, hourly_actuals
 
 
@@ -33,7 +33,7 @@ class DecisionTests(unittest.TestCase):
             hour: value + 5000 for hour, value in changed["actuals"]["2026-01-02"].items()
         }
         before = build_decision(date(2026, 1, 1))
-        with patch("app.services.decision.load_snapshot", return_value=changed):
+        with patch("app.services.decision_service.load_snapshot", return_value=changed):
             after = build_decision(date(2026, 1, 1))
         self.assertEqual(before.risk, after.risk)
         self.assertEqual(before.confidence_score, after.confidence_score)

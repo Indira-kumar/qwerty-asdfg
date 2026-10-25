@@ -3,7 +3,7 @@ from datetime import date, timedelta
 from functools import lru_cache
 from pathlib import Path
 
-from app.schemas.decision import DaySummary, DecisionResponse, HeatmapPoint, HourPoint, Metrics, OverviewResponse, RiskContext
+from app.schemas.decision_schema import DaySummary, DecisionResponse, HeatmapPoint, HourPoint, Metrics, OverviewResponse, RiskContext
 
 DATA_PATH = Path(__file__).resolve().parents[2] / "data" / "january_2026.json"
 LOOKBACK_DAYS = 21

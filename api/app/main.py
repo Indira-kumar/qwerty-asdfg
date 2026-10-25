@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers.decisions import router as decisions_router
+from app.routers.decision_router import router as decisions_router
 
 app = FastAPI(title="Windward API", version="0.1.0")
 app.add_middleware(

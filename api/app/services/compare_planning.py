@@ -2,7 +2,7 @@
 
 from datetime import date, timedelta
 
-from app.services.decision import load_snapshot, percentile, planning_level
+from app.services.decision_service import load_snapshot, percentile, planning_level
 
 
 def daily_energy(snapshot: dict, decision_day: date) -> tuple[float, float] | None:

@@ -2,8 +2,8 @@ from datetime import date
 
 from fastapi import APIRouter, HTTPException
 
-from app.schemas.decision import DecisionResponse, OverviewResponse
-from app.services.decision import build_decision, build_overview
+from app.schemas.decision_schema import DecisionResponse, OverviewResponse
+from app.services.decision_service import build_decision, build_overview
 
 router = APIRouter(prefix="/api/decisions", tags=["decisions"])
 
