@@ -33,9 +33,17 @@ type Decision = {
   decision_date: string;
   delivery_date: string;
   forecast_mwh: number;
+  confidence_score: number | null;
   downside_mwh: number | null;
   actual_mwh: number | null;
-  risk: { completed_days: number; baseline: Metrics | null };
+  risk: {
+    lookback_days: number;
+    completed_days: number;
+    coverage_target: number;
+    planning_error_rate: number | null;
+    historical_daily_mape: number | null;
+    baseline: Metrics | null;
+  };
   realized: Metrics | null;
   hours: Hour[];
 };
@@ -45,6 +53,7 @@ type Overview = {
   january_mae_mw: number | null;
   january_bias_mw: number | null;
   downside_coverage: number | null;
+  evaluated_days: number;
   evaluated_hours: number;
 };
 
@@ -113,7 +122,7 @@ function WindChart({ hours, actual }: { hours: Hour[]; actual: boolean }) {
                     Forecast <b>{mw(h.forecast_mw)}</b>
                   </span>
                   <span>
-                    Downside floor <b>{mw(h.downside_mw)}</b>
+                    Hourly planning level <b>{mw(h.downside_mw)}</b>
                   </span>
                   {actual && (
                     <>
@@ -324,14 +333,13 @@ export function DashboardPage() {
               DECISION INTELLIGENCE / JANUARY 2026
             </span>
             <h1>
-              Plan around the wind
+              Plan for tomorrow's wind
               <br />
-              <em>you can count on.</em>
+              <em>with the risk in view.</em>
             </h1>
             <p>
-              Every forecast is frozen at 09:00 GMT, before the day-ahead buying
-              decision. See the estimate, historical downside, and measured
-              outcome separately.
+              See the wind forecast available at 09:00 GMT, a planning level
+              based on past errors, and what arrived after delivery.
             </p>
           </div>
           <div className="dash-date-card">
@@ -402,24 +410,56 @@ export function DashboardPage() {
               <article className="dash-metric primary">
                 <span>EXPECTED WIND GENERATION</span>
                 <strong>{gwh(decision.forecast_mwh)}</strong>
-                <small>Frozen day-ahead forecast</small>
+                <div className="dash-confidence">
+                  <div className="dash-confidence-heading">
+                    <span>FORECAST CONFIDENCE SCORE</span>
+                    <b>
+                      {decision.confidence_score == null
+                        ? "—"
+                        : `${decision.confidence_score}/100`}
+                    </b>
+                  </div>
+                  <div
+                    className="dash-confidence-track"
+                    role="meter"
+                    aria-label="Historical forecast confidence score"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={decision.confidence_score ?? undefined}
+                  >
+                    <i
+                      style={{ width: `${decision.confidence_score ?? 0}%` }}
+                    />
+                  </div>
+                  <small>
+                    Previous {decision.risk.completed_days} days: {" "}
+                    {decision.risk.historical_daily_mape == null
+                      ? "—"
+                      : `${Math.round(decision.risk.historical_daily_mape * 100)}%`}{" "}
+                    average daily error. Past accuracy, not a probability.
+                  </small>
+                </div>
               </article>
               <article className="dash-metric">
-                <span>HISTORICAL DOWNSIDE FLOOR</span>
+                <span>PLANNING WIND LEVEL</span>
                 <strong>{gwh(decision.downside_mwh)}</strong>
-                <small>Sum of hourly downside floors</small>
+                <small>
+                  A cautious wind amount based on the previous {decision.risk.lookback_days} days.
+                  Actual wind can still be lower.
+                </small>
               </article>
               <article className="dash-metric">
-                <span>TYPICAL HISTORICAL MISS</span>
+                <span>ALLOWANCE FOR LESS WIND</span>
                 <strong>
-                  {decision.risk.baseline
-                    ? (decision.risk.baseline.mae_mw / 1000).toFixed(2)
-                    : "—"}{" "}
-                  <i>GW</i>
+                  {gwh(
+                    decision.downside_mwh == null
+                      ? null
+                      : Math.max(0, decision.forecast_mwh - decision.downside_mwh),
+                  )}
                 </strong>
                 <small>
-                  Mean absolute error · {decision.risk.completed_days} prior
-                  days
+                  Expected wind minus planning wind. This is the gap to allow
+                  for when sizing purchases.
                 </small>
               </article>
             </section>
@@ -456,7 +496,7 @@ export function DashboardPage() {
                   <i className="band" /> Historical error range
                 </span>
                 <span>
-                  <i className="line amber" /> Downside floor
+                  <i className="line amber" /> Hourly planning level
                 </span>
                 {actual && (
                   <span>
@@ -467,25 +507,20 @@ export function DashboardPage() {
               <WindChart hours={decision.hours} actual={actual} />
               <p className="dash-chart-note">
                 <Info size={15} /> The band uses same-hour errors from the
-                previous 56 completed delivery days. Its lower edge is a
-                planning indicator, not a guaranteed minimum.
+                previous {decision.risk.lookback_days} completed delivery days. The daily planning level
+                uses daily errors, so it differs from the sum of the hourly
+                line. Neither is a guaranteed minimum.
               </p>
             </section>
             {mode === "nutshell" ? (
               <section className="dash-insights">
                 <article className="dark">
                   <span>WHAT THIS MEANS FOR THE BUYING DESK</span>
-                  <h2>See the downside before committing.</h2>
+                  <h2>Allow for less wind before committing.</h2>
                   <p>
-                    The difference between expected wind and its historical
-                    downside is{" "}
-                    <b>
-                      {gwh(
-                        decision.forecast_mwh - (decision.downside_mwh ?? 0),
-                      )}
-                    </b>
-                    . Combine this with demand and existing positions to size
-                    purchases.
+                    Use the planning wind level alongside demand and existing
+                    supply to size purchases. It is a wind input, not a total
+                    amount to buy.
                   </p>
                   <button onClick={() => setMode("detailed")}>
                     Explore the evidence <ArrowRight size={17} />
@@ -518,11 +553,13 @@ export function DashboardPage() {
                         ? "—"
                         : `${Math.round(overview.downside_coverage * 100)}%`}
                     </strong>
-                    <h3>Hours above the downside floor</h3>
+                    <h3>Days above the planning level</h3>
                     <p>
-                      Observed coverage over {overview?.evaluated_hours ?? "—"}{" "}
-                      delivery hours. The historical 90th-percentile floor
-                      suggests roughly 90% coverage if errors remain similar.
+                      Observed coverage over {overview?.evaluated_days ?? "—"}{" "}
+                      delivery days. The level targets{" "}
+                      {Math.round(decision.risk.coverage_target * 100)}%
+                      coverage based on prior daily errors; it does not
+                      guarantee delivery.
                     </p>
                   </article>
                   <article>
@@ -600,7 +637,7 @@ export function DashboardPage() {
                         <tr>
                           <th>Hour UTC</th>
                           <th>Forecast</th>
-                          <th>Downside</th>
+                          <th>Hourly planning level</th>
                           <th>Actual</th>
                           <th>Signed error</th>
                           <th>Published UTC</th>
@@ -637,8 +674,8 @@ export function DashboardPage() {
             <footer className="dash-footer">
               Elexon BMRS · WINDFOR + FUELHH/WIND{" "}
               <span>
-                Great Britain metered wind only. Forecast error = forecast −
-                actual.
+                GB transmission-metered wind only; embedded wind is excluded.
+                Forecast error = forecast − actual.
               </span>
             </footer>
           </>

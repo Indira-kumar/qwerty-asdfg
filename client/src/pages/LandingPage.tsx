@@ -139,8 +139,8 @@ function DecisionPreview() {
           role="img"
           aria-label={
             showActual
-              ? `At ${hours[selected]}, forecast ${forecast[selected].toFixed(1)} gigawatts, historical downside ${downside[selected].toFixed(1)} gigawatts, actual ${actual[selected].toFixed(1)} gigawatts`
-              : `At ${hours[selected]}, forecast ${forecast[selected].toFixed(1)} gigawatts and historical downside ${downside[selected].toFixed(1)} gigawatts`
+              ? `At ${hours[selected]}, forecast ${forecast[selected].toFixed(1)} gigawatts, hourly planning level ${downside[selected].toFixed(1)} gigawatts, actual ${actual[selected].toFixed(1)} gigawatts`
+              : `At ${hours[selected]}, forecast ${forecast[selected].toFixed(1)} gigawatts and hourly planning level ${downside[selected].toFixed(1)} gigawatts`
           }
         >
           <defs>
@@ -224,7 +224,7 @@ function DecisionPreview() {
           </span>
           <span>
             <i className="legend-downside" />
-            Historical downside
+            Hourly planning level
           </span>
           {showActual && (
             <span>
@@ -254,7 +254,7 @@ function DecisionPreview() {
           </strong>
         </div>
         <div>
-          <span>Downside view</span>
+          <span>Planning level</span>
           <strong>
             {downside[selected].toFixed(1)} <small>GW</small>
           </strong>
@@ -302,9 +302,8 @@ export function LandingPage() {
             <p className="hero-context">For the desk buying tomorrow's power</p>
             <h1 id="landing-title">You have to buy power before you know the wind.</h1>
             <p className="hero-lead">
-              Windward freezes the forecast available at your 09:00 GMT cutoff
-              and shows how far similar forecasts have overcalled wind. Make
-              tomorrow's wind assumption with the downside in view.
+              At 09:00 GMT, see tomorrow's wind forecast, how accurate recent
+              forecasts were, and a cautious level to plan against.
             </p>
             <div className="hero-actions">
               <Link className="landing-primary-cta" to="/dashboard">
@@ -316,7 +315,7 @@ export function LandingPage() {
             </div>
           </div>
           <div className="hero-bottom">
-            <span>Great Britain wind · Elexon data · January 2026 decisions</span>
+            <span>GB metered wind · Elexon data · January 2026 decisions</span>
             <a href="#problem" aria-label="Scroll to the buying problem">
               Scroll to explore <ChevronDown size={18} />
             </a>
@@ -342,7 +341,7 @@ export function LandingPage() {
             <article>
               <span className="sequence-time">Before the purchase</span>
               <h3>Allow for the miss.</h3>
-              <p>See a downside wind view based on forecast errors from the previous 56 completed delivery days, hour by hour.</p>
+              <p>See a planning wind level from the previous 21 completed delivery days. The daily amount scales with the forecast using past percentage errors.</p>
             </article>
             <article>
               <span className="sequence-time">After delivery</span>
@@ -355,11 +354,12 @@ export function LandingPage() {
           <div className="product-intro">
             <div>
               <span className="section-index">The buying view</span>
-              <h2 id="product-title">See the forecast. See the downside. Then reveal the outcome.</h2>
+              <h2 id="product-title">See the forecast. Know its track record. Then reveal the outcome.</h2>
             </div>
             <p>
-              A point forecast tells you what might arrive. The historical
-              downside tells you how far similar forecasts have overcalled wind.
+              A point forecast tells you what might arrive. A confidence score
+              shows its historical accuracy, while the planning level shows
+              how far similar forecasts have overcalled wind.
               Move through the delivery day below, then reveal actual generation.
             </p>
           </div>
@@ -373,7 +373,7 @@ export function LandingPage() {
             <h2 id="proof-title">Every wind assumption should come with its evidence.</h2>
             <p>
               Explore every purchase decision from 1–31 January 2026. Inspect the
-              forecast available at 09:00, the downside estimate available then,
+              forecast available at 09:00, the planning level available then,
               and the measured error after delivery.
             </p>
             <Link to="/dashboard">Inspect the decision history <ArrowRight size={18} /></Link>
@@ -381,8 +381,8 @@ export function LandingPage() {
           <div className="proof-figures">
             <div><strong>31</strong><span>decision dates</span></div>
             <div><strong>2.04 <small>GW</small></strong><span>mean absolute hourly error</span></div>
-            <div><strong>89%</strong><span>of hours at or above the downside floor</span></div>
-            <p>Measured across 744 delivery hours. Historical risk uses only prior completed days. The downside floor is an empirical planning indicator, not a guarantee for any given hour or day.</p>
+            <div><strong>77%</strong><span>of days at or above the planning level</span></div>
+            <p>Measured across 31 delivery days against an 80% historical coverage target. The planning level and confidence score use only prior completed days. Neither guarantees a delivery outcome.</p>
           </div>
         </section>
         <section className="landing-close" aria-labelledby="close-title">
@@ -400,7 +400,7 @@ export function LandingPage() {
           <span>windward</span>
         </div>
         <p>Windward informs the wind input to a purchase. Total volume still depends on demand, contracts, and other generation.</p>
-        <span>Great Britain · January 2026 pilot</span>
+        <span>GB metered wind · January 2026 pilot</span>
       </footer>
     </div>
   );

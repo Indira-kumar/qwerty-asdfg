@@ -3,7 +3,7 @@ import unittest
 from datetime import date
 from unittest.mock import patch
 
-from app.services.decision import build_decision, load_snapshot
+from app.services.decision import build_decision, build_overview, load_snapshot, planning_level
 from app.services.prepare_data import freeze_forecast, hourly_actuals
 
 
@@ -36,14 +36,37 @@ class DecisionTests(unittest.TestCase):
         with patch("app.services.decision.load_snapshot", return_value=changed):
             after = build_decision(date(2026, 1, 1))
         self.assertEqual(before.risk, after.risk)
+        self.assertEqual(before.confidence_score, after.confidence_score)
+        self.assertEqual(before.downside_mwh, after.downside_mwh)
         self.assertEqual(before.hours[0].downside_mw, after.hours[0].downside_mw)
         self.assertNotEqual(before.realized, after.realized)
+
+    def test_daily_planning_level_uses_daily_errors_and_narrows_january_nine_gap(self):
+        decision = build_decision(date(2026, 1, 8))
+        self.assertEqual(decision.risk.coverage_target, 0.80)
+        self.assertEqual(decision.risk.lookback_days, 21)
+        self.assertGreater(decision.downside_mwh, 238_000)
+        self.assertLess(decision.downside_mwh, 240_000)
+        self.assertAlmostEqual(
+            decision.downside_mwh,
+            decision.forecast_mwh * (1 - decision.risk.planning_error_rate),
+        )
+        self.assertGreater(decision.downside_mwh, sum(hour.downside_mw for hour in decision.hours))
+
+    def test_percentage_allowance_scales_with_forecast(self):
+        self.assertAlmostEqual(planning_level(100, [0.1, 0.2], 0.5), 85)
+        self.assertAlmostEqual(planning_level(200, [0.1, 0.2], 0.5), 170)
+
+    def test_january_daily_coverage_matches_recalibrated_level(self):
+        overview = build_overview()
+        self.assertEqual(overview.evaluated_days, 31)
+        self.assertAlmostEqual(overview.downside_coverage, 24 / 31)
 
     def test_all_january_decisions_have_complete_delivery_days(self):
         for day in range(1, 32):
             decision = build_decision(date(2026, 1, day))
             self.assertEqual(len(decision.hours), 24)
-            self.assertEqual(decision.risk.completed_days, 56)
+            self.assertEqual(decision.risk.completed_days, 21)
             self.assertTrue(all(hour.actual_mw is not None for hour in decision.hours))
 
 

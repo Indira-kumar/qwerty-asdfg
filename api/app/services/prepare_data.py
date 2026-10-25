@@ -11,7 +11,7 @@ import httpx
 from app.adapters.elexon import ElexonAdapter
 
 DATA_PATH = Path(__file__).resolve().parents[2] / "data" / "january_2026.json"
-FIRST_DECISION = date(2025, 11, 5)
+FIRST_DECISION = date(2025, 10, 5)
 LAST_DECISION = date(2026, 1, 31)
 
 
@@ -69,7 +69,9 @@ async def build_snapshot() -> dict:
                 return day.isoformat(), await source.wind_actuals_on(day)
 
         forecast_days = list(dates_inclusive(FIRST_DECISION - timedelta(days=1), LAST_DECISION))
-        actual_days = list(dates_inclusive(FIRST_DECISION + timedelta(days=1), LAST_DECISION + timedelta(days=1)))
+        # Settlement dates and UTC days differ during British Summer Time.
+        # The next settlement date can contain the final UTC hour of a day.
+        actual_days = list(dates_inclusive(FIRST_DECISION + timedelta(days=1), LAST_DECISION + timedelta(days=2)))
         forecast_pairs = await asyncio.gather(*(load_forecasts(day) for day in forecast_days))
         actual_pairs = await asyncio.gather(*(load_actuals(day) for day in actual_days))
 
@@ -80,7 +82,12 @@ async def build_snapshot() -> dict:
         rows = published.get((day - timedelta(days=1)).isoformat(), []) + published[day.isoformat()]
         frozen[day.isoformat()] = freeze_forecast(rows, day)
 
-    hourly = {day: hourly_actuals(rows, date.fromisoformat(day)) for day, rows in actual.items()}
+    hourly = {
+        day.isoformat(): hourly_actuals(
+            actual[day.isoformat()] + actual[(day + timedelta(days=1)).isoformat()], day
+        )
+        for day in dates_inclusive(FIRST_DECISION + timedelta(days=1), LAST_DECISION + timedelta(days=1))
+    }
     for decision_day, hours in frozen.items():
         delivery_day = (date.fromisoformat(decision_day) + timedelta(days=1)).isoformat()
         measured = hourly[delivery_day]
