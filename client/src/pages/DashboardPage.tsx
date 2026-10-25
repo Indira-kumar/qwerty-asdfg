@@ -1,83 +1,649 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowRight, CalendarDays, Download, Info, Wind } from 'lucide-react'
-import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import './dashboard.css'
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight, CalendarDays, Download, Info, Wind } from "lucide-react";
+import {
+  Area,
+  CartesianGrid,
+  ComposedChart,
+  Line,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import "./dashboard.css";
 
-type Metrics = { mae_mw: number; bias_mw: number; rmse_mw: number; observations: number }
-type Hour = { start_time: string; forecast_mw: number; downside_mw: number | null; upside_mw: number | null; actual_mw: number | null; error_mw: number | null; publish_time: string; history_count: number }
-type Decision = { decision_date: string; delivery_date: string; forecast_mwh: number; downside_mwh: number | null; actual_mwh: number | null; risk: { completed_days: number; baseline: Metrics | null }; realized: Metrics | null; hours: Hour[] }
-type Overview = { days: { decision_date: string; mae_mw: number | null }[]; heatmap: { decision_date: string; hour: number; error_mw: number | null }[]; january_mae_mw: number | null; january_bias_mw: number | null; downside_coverage: number | null; evaluated_hours: number }
+type Metrics = {
+  mae_mw: number;
+  bias_mw: number;
+  rmse_mw: number;
+  observations: number;
+};
+type Hour = {
+  start_time: string;
+  forecast_mw: number;
+  downside_mw: number | null;
+  upside_mw: number | null;
+  actual_mw: number | null;
+  error_mw: number | null;
+  publish_time: string;
+  history_count: number;
+};
+type Decision = {
+  decision_date: string;
+  delivery_date: string;
+  forecast_mwh: number;
+  downside_mwh: number | null;
+  actual_mwh: number | null;
+  risk: { completed_days: number; baseline: Metrics | null };
+  realized: Metrics | null;
+  hours: Hour[];
+};
+type Overview = {
+  days: { decision_date: string; mae_mw: number | null }[];
+  heatmap: { decision_date: string; hour: number; error_mw: number | null }[];
+  january_mae_mw: number | null;
+  january_bias_mw: number | null;
+  downside_coverage: number | null;
+  evaluated_hours: number;
+};
 
-const API = import.meta.env.VITE_API_BASE_URL ?? ''
-const mw = (n: number | null | undefined) => n == null ? '—' : `${Math.round(n).toLocaleString('en-GB')} MW`
-const gwh = (n: number | null | undefined) => n == null ? '—' : `${(n / 1000).toFixed(1)} GWh`
-const dateLabel = (s: string) => new Date(`${s}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
-const hourLabel = (s: string) => `${s.slice(11, 13)}:00`
+const API = import.meta.env.VITE_API_BASE_URL ?? "";
+const mw = (n: number | null | undefined) =>
+  n == null ? "—" : `${Math.round(n).toLocaleString("en-GB")} MW`;
+const gwh = (n: number | null | undefined) =>
+  n == null ? "—" : `${(n / 1000).toFixed(1)} GWh`;
+const dateLabel = (s: string) =>
+  new Date(`${s}T12:00:00Z`).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+const hourLabel = (s: string) => `${s.slice(11, 13)}:00`;
 
 function WindChart({ hours, actual }: { hours: Hour[]; actual: boolean }) {
-  const data = hours.map(h => ({ ...h, hour: hourLabel(h.start_time), band: h.downside_mw == null || h.upside_mw == null ? null : [h.downside_mw, h.upside_mw] }))
-  return <div className="dash-chart" role="img" aria-label="Hourly forecast, historical uncertainty range and optional actual wind generation">
-    <ResponsiveContainer width="100%" height={340}><ComposedChart data={data} margin={{ top: 10, right: 10, left: -22, bottom: 0 }}>
-      <CartesianGrid vertical={false} stroke="#e5eaf1" strokeDasharray="4 6" />
-      <XAxis dataKey="hour" tickLine={false} axisLine={false} interval={3} tick={{ fill: '#8290a4', fontSize: 11 }} dy={8} />
-      <YAxis tickLine={false} axisLine={false} tick={{ fill: '#8290a4', fontSize: 11 }} tickFormatter={v => `${Math.round(v / 1000)}k`} />
-      <Tooltip cursor={{ stroke: '#9aabc0', strokeDasharray: '3 3' }} content={({ active, payload }) => {
-        if (!active || !payload?.length) return null
-        const h = payload[0].payload as Hour
-        return <div className="dash-tooltip"><strong>{hourLabel(h.start_time)} UTC</strong><span>Forecast <b>{mw(h.forecast_mw)}</b></span><span>Downside floor <b>{mw(h.downside_mw)}</b></span>{actual && <><span>Actual <b>{mw(h.actual_mw)}</b></span><span>Signed error <b>{mw(h.error_mw)}</b></span></>}<small>Published {h.publish_time.slice(11, 16)} UTC · {h.history_count} historical hours</small></div>
-      }} />
-      <Area dataKey="band" type="monotone" stroke="none" fill="#dde5ff" fillOpacity={0.85} isAnimationActive={false} />
-      <Line dataKey="forecast_mw" type="monotone" stroke="#315ce8" strokeWidth={3} dot={false} activeDot={{ r: 5 }} isAnimationActive={false} />
-      <Line dataKey="downside_mw" type="monotone" stroke="#d98a27" strokeWidth={1.5} strokeDasharray="5 5" dot={false} activeDot={false} isAnimationActive={false} />
-      {actual && <Line dataKey="actual_mw" type="monotone" stroke="#078c86" strokeWidth={2.5} dot={false} activeDot={{ r: 5 }} isAnimationActive={false} />}
-    </ComposedChart></ResponsiveContainer>
-  </div>
+  const data = hours.map((h) => ({
+    ...h,
+    hour: hourLabel(h.start_time),
+    band:
+      h.downside_mw == null || h.upside_mw == null
+        ? null
+        : [h.downside_mw, h.upside_mw],
+  }));
+  return (
+    <div
+      className="dash-chart"
+      role="img"
+      aria-label="Hourly forecast, historical uncertainty range and optional actual wind generation"
+    >
+      <ResponsiveContainer width="100%" height={340}>
+        <ComposedChart
+          data={data}
+          margin={{ top: 10, right: 10, left: -22, bottom: 0 }}
+        >
+          <CartesianGrid
+            vertical={false}
+            stroke="#e5eaf1"
+            strokeDasharray="4 6"
+          />
+          <XAxis
+            dataKey="hour"
+            tickLine={false}
+            axisLine={false}
+            interval={3}
+            tick={{ fill: "#8290a4", fontSize: 11 }}
+            dy={8}
+          />
+          <YAxis
+            tickLine={false}
+            axisLine={false}
+            tick={{ fill: "#8290a4", fontSize: 11 }}
+            tickFormatter={(v) => `${Math.round(v / 1000)}k`}
+          />
+          <Tooltip
+            cursor={{ stroke: "#9aabc0", strokeDasharray: "3 3" }}
+            content={({ active, payload }) => {
+              if (!active || !payload?.length) return null;
+              const h = payload[0].payload as Hour;
+              return (
+                <div className="dash-tooltip">
+                  <strong>{hourLabel(h.start_time)} UTC</strong>
+                  <span>
+                    Forecast <b>{mw(h.forecast_mw)}</b>
+                  </span>
+                  <span>
+                    Downside floor <b>{mw(h.downside_mw)}</b>
+                  </span>
+                  {actual && (
+                    <>
+                      <span>
+                        Actual <b>{mw(h.actual_mw)}</b>
+                      </span>
+                      <span>
+                        Signed error <b>{mw(h.error_mw)}</b>
+                      </span>
+                    </>
+                  )}
+                  <small>
+                    Published {h.publish_time.slice(11, 16)} UTC ·{" "}
+                    {h.history_count} historical hours
+                  </small>
+                </div>
+              );
+            }}
+          />
+          <Area
+            dataKey="band"
+            type="monotone"
+            stroke="none"
+            fill="#dde5ff"
+            fillOpacity={0.85}
+            isAnimationActive={false}
+          />
+          <Line
+            dataKey="forecast_mw"
+            type="monotone"
+            stroke="#315ce8"
+            strokeWidth={3}
+            dot={false}
+            activeDot={{ r: 5 }}
+            isAnimationActive={false}
+          />
+          <Line
+            dataKey="downside_mw"
+            type="monotone"
+            stroke="#d98a27"
+            strokeWidth={1.5}
+            strokeDasharray="5 5"
+            dot={false}
+            activeDot={false}
+            isAnimationActive={false}
+          />
+          {actual && (
+            <Line
+              dataKey="actual_mw"
+              type="monotone"
+              stroke="#078c86"
+              strokeWidth={2.5}
+              dot={false}
+              activeDot={{ r: 5 }}
+              isAnimationActive={false}
+            />
+          )}
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
+  );
 }
 
-function Heatmap({ overview, selected, select }: { overview: Overview; selected: string; select: (day: string) => void }) {
-  const lookup = new Map(overview.heatmap.map(h => [`${h.decision_date}:${h.hour}`, h.error_mw]))
-  return <div className="dash-heatmap-scroll"><div className="dash-heatmap" role="group" aria-label="January hourly forecast errors">
-    <div />{Array.from({ length: 24 }, (_, h) => <span className="dash-hour-label" key={h}>{h % 4 === 0 ? String(h).padStart(2, '0') : ''}</span>)}
-    {overview.days.map(day => <div className={`dash-heatmap-row ${selected === day.decision_date ? 'selected' : ''}`} key={day.decision_date}>
-      <button className="dash-day-label" onClick={() => select(day.decision_date)} aria-label={`Select ${dateLabel(day.decision_date)}`}>{day.decision_date.slice(8)}</button>
-      {Array.from({ length: 24 }, (_, h) => { const error = lookup.get(`${day.decision_date}:${h}`); const intensity = Math.min(Math.abs(error ?? 0) / 6500, 1); const background = error == null ? '#edf1f5' : error >= 0 ? `rgba(217,138,39,${0.16 + intensity * .74})` : `rgba(7,140,134,${0.16 + intensity * .74})`; return <button key={h} className="dash-heat-cell" style={{ background }} onClick={() => select(day.decision_date)} title={`${dateLabel(day.decision_date)} ${String(h).padStart(2, '0')}:00 · ${mw(error)}`} aria-label={`${dateLabel(day.decision_date)} ${String(h).padStart(2, '0')}:00, error ${mw(error)}`} /> })}
-    </div>)}
-  </div></div>
+function Heatmap({
+  overview,
+  selected,
+  select,
+}: {
+  overview: Overview;
+  selected: string;
+  select: (day: string) => void;
+}) {
+  const lookup = new Map(
+    overview.heatmap.map((h) => [`${h.decision_date}:${h.hour}`, h.error_mw]),
+  );
+  return (
+    <div className="dash-heatmap-scroll">
+      <div
+        className="dash-heatmap"
+        role="group"
+        aria-label="January hourly forecast errors"
+      >
+        <div />
+        {Array.from({ length: 24 }, (_, h) => (
+          <span className="dash-hour-label" key={h}>
+            {h % 4 === 0 ? String(h).padStart(2, "0") : ""}
+          </span>
+        ))}
+        {overview.days.map((day) => (
+          <div
+            className={`dash-heatmap-row ${selected === day.decision_date ? "selected" : ""}`}
+            key={day.decision_date}
+          >
+            <button
+              className="dash-day-label"
+              onClick={() => select(day.decision_date)}
+              aria-label={`Select ${dateLabel(day.decision_date)}`}
+            >
+              {day.decision_date.slice(8)}
+            </button>
+            {Array.from({ length: 24 }, (_, h) => {
+              const error = lookup.get(`${day.decision_date}:${h}`);
+              const intensity = Math.min(Math.abs(error ?? 0) / 6500, 1);
+              const background =
+                error == null
+                  ? "#edf1f5"
+                  : error >= 0
+                    ? `rgba(217,138,39,${0.16 + intensity * 0.74})`
+                    : `rgba(7,140,134,${0.16 + intensity * 0.74})`;
+              return (
+                <button
+                  key={h}
+                  className="dash-heat-cell"
+                  style={{ background }}
+                  onClick={() => select(day.decision_date)}
+                  title={`${dateLabel(day.decision_date)} ${String(h).padStart(2, "0")}:00 · ${mw(error)}`}
+                  aria-label={`${dateLabel(day.decision_date)} ${String(h).padStart(2, "0")}:00, error ${mw(error)}`}
+                />
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function exportCsv(d: Decision) {
-  const rows = ['start_time,forecast_mw,downside_mw,upside_mw,actual_mw,error_mw,publish_time', ...d.hours.map(h => [h.start_time, h.forecast_mw, h.downside_mw ?? '', h.upside_mw ?? '', h.actual_mw ?? '', h.error_mw ?? '', h.publish_time].join(','))]
-  const url = URL.createObjectURL(new Blob([rows.join('\n')], { type: 'text/csv' }))
-  const a = document.createElement('a'); a.href = url; a.download = `windward-${d.decision_date}.csv`; a.click(); URL.revokeObjectURL(url)
+  const rows = [
+    "start_time,forecast_mw,downside_mw,upside_mw,actual_mw,error_mw,publish_time",
+    ...d.hours.map((h) =>
+      [
+        h.start_time,
+        h.forecast_mw,
+        h.downside_mw ?? "",
+        h.upside_mw ?? "",
+        h.actual_mw ?? "",
+        h.error_mw ?? "",
+        h.publish_time,
+      ].join(","),
+    ),
+  ];
+  const url = URL.createObjectURL(
+    new Blob([rows.join("\n")], { type: "text/csv" }),
+  );
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `windward-${d.decision_date}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export function DashboardPage() {
-  const [selected, select] = useState('2026-01-14')
-  const [mode, setMode] = useState<'nutshell' | 'detailed'>('nutshell')
-  const [actual, showActual] = useState(false)
-  const [decision, setDecision] = useState<Decision | null>(null)
-  const [overview, setOverview] = useState<Overview | null>(null)
-  const [error, setError] = useState('')
-  useEffect(() => { const c = new AbortController(); fetch(`${API}/api/decisions`, { signal: c.signal }).then(r => { if (!r.ok) throw Error('Could not load January overview'); return r.json() }).then(setOverview).catch(e => { if (e.name !== 'AbortError') setError(e.message) }); return () => c.abort() }, [])
-  useEffect(() => { const c = new AbortController(); setDecision(null); fetch(`${API}/api/decisions/${selected}`, { signal: c.signal }).then(r => { if (!r.ok) throw Error('Could not load the decision'); return r.json() }).then(d => { setDecision(d); setError('') }).catch(e => { if (e.name !== 'AbortError') setError(e.message) }); return () => c.abort() }, [selected])
-  return <div className="dash-page">
-    <header className="dash-header"><Link className="dash-logo" to="/"><span><Wind size={21} /></span> windward<b>.</b></Link><div>Day-ahead wind intelligence</div><Link className="dash-about" to="/">About <ArrowRight size={15} /></Link></header>
-    <main className="dash-main">
-      <section className="dash-intro"><div><span className="dash-kicker">DECISION INTELLIGENCE / JANUARY 2026</span><h1>Plan around the wind<br /><em>you can count on.</em></h1><p>Every forecast is frozen at 09:00 GMT, before the day-ahead buying decision. See the estimate, historical downside, and measured outcome separately.</p></div><div className="dash-date-card"><span><CalendarDays size={16} /> BUYING DECISION</span><label htmlFor="decision-date">Decision date</label><select id="decision-date" value={selected} onChange={e => select(e.target.value)}>{Array.from({ length: 31 }, (_, i) => `2026-01-${String(i + 1).padStart(2, '0')}`).map(d => <option key={d} value={d}>{dateLabel(d)}</option>)}</select><small>For delivery {decision ? dateLabel(decision.delivery_date) : 'the following day'} · 09:00 GMT cutoff</small></div></section>
-      <div className="dash-toolbar"><div className="dash-tabs" role="tablist" aria-label="Dashboard view"><button role="tab" aria-selected={mode === 'nutshell'} className={mode === 'nutshell' ? 'active' : ''} onClick={() => setMode('nutshell')}>In a nutshell</button><button role="tab" aria-selected={mode === 'detailed'} className={mode === 'detailed' ? 'active' : ''} onClick={() => setMode('detailed')}>Detailed analysis</button></div><span className="dash-cutoff"><i /> {mode === 'detailed' || actual ? '09:00 FORECAST + AFTER-DELIVERY REVIEW' : 'AS KNOWN AT 09:00 GMT'}</span></div>
-      {error && <div className="dash-error" role="alert">{error}. Check the API service and refresh.</div>}
-      {!decision && !error && <div className="dash-loading">Loading decision data…</div>}
-      {decision && <>
-        <section className="dash-metrics" aria-label="Decision summary"><article className="dash-metric primary"><span>EXPECTED WIND GENERATION</span><strong>{gwh(decision.forecast_mwh)}</strong><small>Frozen day-ahead forecast</small></article><article className="dash-metric"><span>HISTORICAL DOWNSIDE FLOOR</span><strong>{gwh(decision.downside_mwh)}</strong><small>Sum of hourly downside floors</small></article><article className="dash-metric"><span>TYPICAL HISTORICAL MISS</span><strong>{decision.risk.baseline ? (decision.risk.baseline.mae_mw / 1000).toFixed(2) : '—'} <i>GW</i></strong><small>Mean absolute error · {decision.risk.completed_days} prior days</small></article></section>
-        <section className="dash-panel"><div className="dash-panel-head"><div><span className="dash-kicker">DELIVERY PROFILE</span><h2>{mode === 'nutshell' ? 'The forecast, with room for error.' : 'Hour-by-hour generation.'}</h2><p>{dateLabel(decision.delivery_date)} · Great Britain · average MW</p></div><button className={`dash-reveal ${actual ? 'on' : ''}`} aria-pressed={actual} onClick={() => showActual(!actual)}><span><i /></span>{actual ? 'Hide actuals' : 'Reveal actuals'}</button></div><div className="dash-legend"><span><i className="line blue" /> Forecast</span><span><i className="band" /> Historical error range</span><span><i className="line amber" /> Downside floor</span>{actual && <span><i className="line teal" /> Actual</span>}</div><WindChart hours={decision.hours} actual={actual} /><p className="dash-chart-note"><Info size={15} /> The band uses same-hour errors from the previous 56 completed delivery days. Its lower edge is a planning indicator, not a guaranteed minimum.</p></section>
-        {mode === 'nutshell' ? <section className="dash-insights"><article className="dark"><span>WHAT THIS MEANS FOR THE BUYING DESK</span><h2>See the downside before committing.</h2><p>The difference between expected wind and its historical downside is <b>{gwh(decision.forecast_mwh - (decision.downside_mwh ?? 0))}</b>. Combine this with demand and existing positions to size purchases.</p><button onClick={() => setMode('detailed')}>Explore the evidence <ArrowRight size={17} /></button></article><article><span>AFTER DELIVERY · EVALUATION</span><h2>{actual ? gwh(decision.actual_mwh) : 'Keep hindsight separate.'}</h2><p>{actual ? `Measured wind on ${dateLabel(decision.delivery_date)}. The frozen forecast missed by ${mw(decision.realized?.mae_mw)} on average.` : 'The actual generation is available now, but it was unknown when the 09:00 decision was made.'}</p><button onClick={() => showActual(true)}>Reveal measured outcome <ArrowRight size={17} /></button></article></section> : <>
-          <section className="dash-backtest"><article><span>JANUARY BACKTEST</span><strong>{overview?.downside_coverage == null ? '—' : `${Math.round(overview.downside_coverage * 100)}%`}</strong><h3>Hours above the downside floor</h3><p>Observed coverage over {overview?.evaluated_hours ?? '—'} delivery hours. The historical 90th-percentile floor suggests roughly 90% coverage if errors remain similar.</p></article><article><span>REALIZED ACCURACY</span><strong>{overview?.january_mae_mw == null ? '—' : `${(overview.january_mae_mw / 1000).toFixed(2)} GW`}</strong><h3>January mean absolute error</h3><p>Average absolute gap between the frozen forecast and measured wind.</p></article><article><span>SYSTEMATIC DIRECTION</span><strong>{overview?.january_bias_mw == null ? '—' : `+${(overview.january_bias_mw / 1000).toFixed(2)} GW`}</strong><h3>January forecast bias</h3><p>Positive means forecasts were above actual wind on average.</p></article></section>
-          {overview && <section className="dash-panel"><div className="dash-panel-head"><div><span className="dash-kicker">31 DECISIONS × 24 HOURS</span><h2>Where the forecast missed.</h2><p>Each cell is one delivery hour. Select a row to inspect its buying decision.</p></div><div className="dash-heat-legend"><i className="teal" /> Underforecast <i className="amber" /> Overforecast</div></div><Heatmap overview={overview} selected={selected} select={select} /></section>}
-          <section className="dash-panel"><div className="dash-panel-head"><div><span className="dash-kicker">AUDIT TRAIL</span><h2>The numbers behind the line.</h2><p>Forecasts are selected separately for every delivery hour.</p></div><button className="dash-export" onClick={() => exportCsv(decision)}><Download size={16} /> Export CSV</button></div><div className="dash-table-wrap"><table><thead><tr><th>Hour UTC</th><th>Forecast</th><th>Downside</th><th>Actual</th><th>Signed error</th><th>Published UTC</th></tr></thead><tbody>{decision.hours.map(h => <tr key={h.start_time}><td>{hourLabel(h.start_time)}</td><td>{mw(h.forecast_mw)}</td><td>{mw(h.downside_mw)}</td><td>{mw(h.actual_mw)}</td><td className={h.error_mw != null && h.error_mw > 0 ? 'positive' : 'negative'}>{h.error_mw != null && h.error_mw > 0 ? '+' : ''}{mw(h.error_mw)}</td><td>{h.publish_time.slice(0, 16).replace('T', ' ')}</td></tr>)}</tbody></table></div></section>
-        </>}
-        <footer className="dash-footer">Elexon BMRS · WINDFOR + FUELHH/WIND <span>Great Britain metered wind only. Forecast error = forecast − actual.</span></footer>
-      </>}
-    </main>
-  </div>
+  const [selected, select] = useState("2026-01-14");
+  const [mode, setMode] = useState<"nutshell" | "detailed">("nutshell");
+  const [actual, showActual] = useState(false);
+  const [decision, setDecision] = useState<Decision | null>(null);
+  const [overview, setOverview] = useState<Overview | null>(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    const c = new AbortController();
+    fetch(`${API}/api/decisions`, { signal: c.signal })
+      .then((r) => {
+        if (!r.ok) throw Error("Could not load January overview");
+        return r.json();
+      })
+      .then(setOverview)
+      .catch((e) => {
+        if (e.name !== "AbortError") setError(e.message);
+      });
+    return () => c.abort();
+  }, []);
+  useEffect(() => {
+    const c = new AbortController();
+    setDecision(null);
+    fetch(`${API}/api/decisions/${selected}`, { signal: c.signal })
+      .then((r) => {
+        if (!r.ok) throw Error("Could not load the decision");
+        return r.json();
+      })
+      .then((d) => {
+        setDecision(d);
+        setError("");
+      })
+      .catch((e) => {
+        if (e.name !== "AbortError") setError(e.message);
+      });
+    return () => c.abort();
+  }, [selected]);
+  return (
+    <div className="dash-page">
+      <header className="dash-header">
+        <Link className="dash-logo" to="/">
+          <span>
+            <Wind size={21} />
+          </span>{" "}
+          windward<b>.</b>
+        </Link>
+        <div>Day-ahead wind intelligence</div>
+        <Link className="dash-about" to="/">
+          About <ArrowRight size={15} />
+        </Link>
+      </header>
+      <main className="dash-main">
+        <section className="dash-intro">
+          <div>
+            <span className="dash-kicker">
+              DECISION INTELLIGENCE / JANUARY 2026
+            </span>
+            <h1>
+              Plan around the wind
+              <br />
+              <em>you can count on.</em>
+            </h1>
+            <p>
+              Every forecast is frozen at 09:00 GMT, before the day-ahead buying
+              decision. See the estimate, historical downside, and measured
+              outcome separately.
+            </p>
+          </div>
+          <div className="dash-date-card">
+            <span>
+              <CalendarDays size={16} /> BUYING DECISION
+            </span>
+            <label htmlFor="decision-date">Decision date</label>
+            <select
+              id="decision-date"
+              value={selected}
+              onChange={(e) => select(e.target.value)}
+            >
+              {Array.from(
+                { length: 31 },
+                (_, i) => `2026-01-${String(i + 1).padStart(2, "0")}`,
+              ).map((d) => (
+                <option key={d} value={d}>
+                  {dateLabel(d)}
+                </option>
+              ))}
+            </select>
+            <small>
+              For delivery{" "}
+              {decision
+                ? dateLabel(decision.delivery_date)
+                : "the following day"}{" "}
+              · 09:00 GMT cutoff
+            </small>
+          </div>
+        </section>
+        <div className="dash-toolbar">
+          <div className="dash-tabs" role="tablist" aria-label="Dashboard view">
+            <button
+              role="tab"
+              aria-selected={mode === "nutshell"}
+              className={mode === "nutshell" ? "active" : ""}
+              onClick={() => setMode("nutshell")}
+            >
+              In a nutshell
+            </button>
+            <button
+              role="tab"
+              aria-selected={mode === "detailed"}
+              className={mode === "detailed" ? "active" : ""}
+              onClick={() => setMode("detailed")}
+            >
+              Detailed analysis
+            </button>
+          </div>
+          <span className="dash-cutoff">
+            <i />{" "}
+            {mode === "detailed" || actual
+              ? "09:00 FORECAST + AFTER-DELIVERY REVIEW"
+              : "AS KNOWN AT 09:00 GMT"}
+          </span>
+        </div>
+        {error && (
+          <div className="dash-error" role="alert">
+            {error}. Check the API service and refresh.
+          </div>
+        )}
+        {!decision && !error && (
+          <div className="dash-loading">Loading decision data…</div>
+        )}
+        {decision && (
+          <>
+            <section className="dash-metrics" aria-label="Decision summary">
+              <article className="dash-metric primary">
+                <span>EXPECTED WIND GENERATION</span>
+                <strong>{gwh(decision.forecast_mwh)}</strong>
+                <small>Frozen day-ahead forecast</small>
+              </article>
+              <article className="dash-metric">
+                <span>HISTORICAL DOWNSIDE FLOOR</span>
+                <strong>{gwh(decision.downside_mwh)}</strong>
+                <small>Sum of hourly downside floors</small>
+              </article>
+              <article className="dash-metric">
+                <span>TYPICAL HISTORICAL MISS</span>
+                <strong>
+                  {decision.risk.baseline
+                    ? (decision.risk.baseline.mae_mw / 1000).toFixed(2)
+                    : "—"}{" "}
+                  <i>GW</i>
+                </strong>
+                <small>
+                  Mean absolute error · {decision.risk.completed_days} prior
+                  days
+                </small>
+              </article>
+            </section>
+            <section className="dash-panel">
+              <div className="dash-panel-head">
+                <div>
+                  <span className="dash-kicker">DELIVERY PROFILE</span>
+                  <h2>
+                    {mode === "nutshell"
+                      ? "The forecast, with room for error."
+                      : "Hour-by-hour generation."}
+                  </h2>
+                  <p>
+                    {dateLabel(decision.delivery_date)} · Great Britain ·
+                    average MW
+                  </p>
+                </div>
+                <button
+                  className={`dash-reveal ${actual ? "on" : ""}`}
+                  aria-pressed={actual}
+                  onClick={() => showActual(!actual)}
+                >
+                  <span>
+                    <i />
+                  </span>
+                  {actual ? "Hide actuals" : "Reveal actuals"}
+                </button>
+              </div>
+              <div className="dash-legend">
+                <span>
+                  <i className="line blue" /> Forecast
+                </span>
+                <span>
+                  <i className="band" /> Historical error range
+                </span>
+                <span>
+                  <i className="line amber" /> Downside floor
+                </span>
+                {actual && (
+                  <span>
+                    <i className="line teal" /> Actual
+                  </span>
+                )}
+              </div>
+              <WindChart hours={decision.hours} actual={actual} />
+              <p className="dash-chart-note">
+                <Info size={15} /> The band uses same-hour errors from the
+                previous 56 completed delivery days. Its lower edge is a
+                planning indicator, not a guaranteed minimum.
+              </p>
+            </section>
+            {mode === "nutshell" ? (
+              <section className="dash-insights">
+                <article className="dark">
+                  <span>WHAT THIS MEANS FOR THE BUYING DESK</span>
+                  <h2>See the downside before committing.</h2>
+                  <p>
+                    The difference between expected wind and its historical
+                    downside is{" "}
+                    <b>
+                      {gwh(
+                        decision.forecast_mwh - (decision.downside_mwh ?? 0),
+                      )}
+                    </b>
+                    . Combine this with demand and existing positions to size
+                    purchases.
+                  </p>
+                  <button onClick={() => setMode("detailed")}>
+                    Explore the evidence <ArrowRight size={17} />
+                  </button>
+                </article>
+                <article>
+                  <span>AFTER DELIVERY · EVALUATION</span>
+                  <h2>
+                    {actual
+                      ? gwh(decision.actual_mwh)
+                      : "Keep hindsight separate."}
+                  </h2>
+                  <p>
+                    {actual
+                      ? `Measured wind on ${dateLabel(decision.delivery_date)}. The frozen forecast missed by ${mw(decision.realized?.mae_mw)} on average.`
+                      : "The actual generation is available now, but it was unknown when the 09:00 decision was made."}
+                  </p>
+                  <button onClick={() => showActual(true)}>
+                    Reveal measured outcome <ArrowRight size={17} />
+                  </button>
+                </article>
+              </section>
+            ) : (
+              <>
+                <section className="dash-backtest">
+                  <article>
+                    <span>JANUARY BACKTEST</span>
+                    <strong>
+                      {overview?.downside_coverage == null
+                        ? "—"
+                        : `${Math.round(overview.downside_coverage * 100)}%`}
+                    </strong>
+                    <h3>Hours above the downside floor</h3>
+                    <p>
+                      Observed coverage over {overview?.evaluated_hours ?? "—"}{" "}
+                      delivery hours. The historical 90th-percentile floor
+                      suggests roughly 90% coverage if errors remain similar.
+                    </p>
+                  </article>
+                  <article>
+                    <span>REALIZED ACCURACY</span>
+                    <strong>
+                      {overview?.january_mae_mw == null
+                        ? "—"
+                        : `${(overview.january_mae_mw / 1000).toFixed(2)} GW`}
+                    </strong>
+                    <h3>January mean absolute error</h3>
+                    <p>
+                      Average absolute gap between the frozen forecast and
+                      measured wind.
+                    </p>
+                  </article>
+                  <article>
+                    <span>SYSTEMATIC DIRECTION</span>
+                    <strong>
+                      {overview?.january_bias_mw == null
+                        ? "—"
+                        : `+${(overview.january_bias_mw / 1000).toFixed(2)} GW`}
+                    </strong>
+                    <h3>January forecast bias</h3>
+                    <p>
+                      Positive means forecasts were above actual wind on
+                      average.
+                    </p>
+                  </article>
+                </section>
+                {overview && (
+                  <section className="dash-panel">
+                    <div className="dash-panel-head">
+                      <div>
+                        <span className="dash-kicker">
+                          31 DECISIONS × 24 HOURS
+                        </span>
+                        <h2>Where the forecast missed.</h2>
+                        <p>
+                          Each cell is one delivery hour. Select a row to
+                          inspect its buying decision.
+                        </p>
+                      </div>
+                      <div className="dash-heat-legend">
+                        <i className="teal" /> Underforecast{" "}
+                        <i className="amber" /> Overforecast
+                      </div>
+                    </div>
+                    <Heatmap
+                      overview={overview}
+                      selected={selected}
+                      select={select}
+                    />
+                  </section>
+                )}
+                <section className="dash-panel">
+                  <div className="dash-panel-head">
+                    <div>
+                      <span className="dash-kicker">AUDIT TRAIL</span>
+                      <h2>The numbers behind the line.</h2>
+                      <p>
+                        Forecasts are selected separately for every delivery
+                        hour.
+                      </p>
+                    </div>
+                    <button
+                      className="dash-export"
+                      onClick={() => exportCsv(decision)}
+                    >
+                      <Download size={16} /> Export CSV
+                    </button>
+                  </div>
+                  <div className="dash-table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Hour UTC</th>
+                          <th>Forecast</th>
+                          <th>Downside</th>
+                          <th>Actual</th>
+                          <th>Signed error</th>
+                          <th>Published UTC</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {decision.hours.map((h) => (
+                          <tr key={h.start_time}>
+                            <td>{hourLabel(h.start_time)}</td>
+                            <td>{mw(h.forecast_mw)}</td>
+                            <td>{mw(h.downside_mw)}</td>
+                            <td>{mw(h.actual_mw)}</td>
+                            <td
+                              className={
+                                h.error_mw != null && h.error_mw > 0
+                                  ? "positive"
+                                  : "negative"
+                              }
+                            >
+                              {h.error_mw != null && h.error_mw > 0 ? "+" : ""}
+                              {mw(h.error_mw)}
+                            </td>
+                            <td>
+                              {h.publish_time.slice(0, 16).replace("T", " ")}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              </>
+            )}
+            <footer className="dash-footer">
+              Elexon BMRS · WINDFOR + FUELHH/WIND{" "}
+              <span>
+                Great Britain metered wind only. Forecast error = forecast −
+                actual.
+              </span>
+            </footer>
+          </>
+        )}
+      </main>
+    </div>
+  );
 }
