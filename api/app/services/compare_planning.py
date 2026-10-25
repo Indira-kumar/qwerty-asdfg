@@ -19,7 +19,14 @@ def daily_energy(snapshot: dict, decision_day: date) -> tuple[float, float] | No
     return sum(entry["forecast_mw"] for entry in forecast.values()), sum(actual.values())
 
 
-def evaluate(snapshot: dict, first: date, last: date, lookback_days: int, error_percentile: float, relative: bool) -> tuple[int, int, float, float]:
+def evaluate(
+    snapshot: dict,
+    first: date,
+    last: date,
+    lookback_days: int,
+    error_percentile: float,
+    relative: bool,
+) -> tuple[int, int, float, float]:
     covered = 0
     buffers: list[float] = []
     shortfalls: list[float] = []
@@ -28,13 +35,19 @@ def evaluate(snapshot: dict, first: date, last: date, lookback_days: int, error_
         current = daily_energy(snapshot, day)
         # The newest historical delivery day is yesterday, so its buying
         # decision was two calendar days before today's buying decision.
-        history = [daily_energy(snapshot, day - timedelta(days=lag + 1)) for lag in range(1, lookback_days + 1)]
+        history = [
+            daily_energy(snapshot, day - timedelta(days=lag + 1))
+            for lag in range(1, lookback_days + 1)
+        ]
         if current is None or any(pair is None for pair in history):
             raise ValueError(f"Incomplete calibration history for {day}")
         forecast, actual = current
         errors = [old_forecast - old_actual for old_forecast, old_actual in history]
         if relative:
-            rates = [error / old_forecast for error, (old_forecast, _) in zip(errors, history)]
+            rates = [
+                error / old_forecast
+                for error, (old_forecast, _) in zip(errors, history, strict=True)
+            ]
             level = planning_level(forecast, rates, error_percentile)
         else:
             level = max(0, forecast - max(0, percentile(errors, error_percentile)))
@@ -69,8 +82,13 @@ async def main() -> None:
             ("December validation", date(2025, 12, 1), date(2025, 12, 31)),
             ("January backtest", date(2026, 1, 1), date(2026, 1, 31)),
         ]:
-            count, covered, buffer, shortfall = evaluate(snapshot, first, last, days, quantile, relative)
-            print(f"  {label}: {covered}/{count} days covered; {buffer:.1f} GWh mean buffer; {shortfall:.1f} GWh mean shortfall")
+            count, covered, buffer, shortfall = evaluate(
+                snapshot, first, last, days, quantile, relative
+            )
+            print(
+                f"  {label}: {covered}/{count} days covered; "
+                f"{buffer:.1f} GWh mean buffer; {shortfall:.1f} GWh mean shortfall"
+            )
 
 
 if __name__ == "__main__":

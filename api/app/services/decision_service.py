@@ -1,7 +1,15 @@
 from datetime import date, timedelta
 
 from app.adapters.base import GenerationSource
-from app.schemas.decision_schema import DaySummary, DecisionResponse, HeatmapPoint, HourPoint, Metrics, OverviewResponse, RiskContext
+from app.schemas.decision_schema import (
+    DaySummary,
+    DecisionResponse,
+    HeatmapPoint,
+    HourPoint,
+    Metrics,
+    OverviewResponse,
+    RiskContext,
+)
 from app.services.prepare_data import load_generation_data
 from app.settings import Settings, get_settings
 
@@ -66,21 +74,30 @@ def build_decision(
         error_rates = error_rates_by_hour[hour]
         predicted = entry["forecast_mw"]
         downside = planning_level(predicted, error_rates, settings.planning_coverage_target)
-        upside = max(predicted, predicted * (1 - percentile(error_rates, 1 - settings.planning_coverage_target))) if error_rates else None
+        upside = (
+            max(
+                predicted,
+                predicted * (1 - percentile(error_rates, 1 - settings.planning_coverage_target)),
+            )
+            if error_rates
+            else None
+        )
         measured = actual.get(key)
         signed_error = predicted - measured if measured is not None else None
         if signed_error is not None:
             observed_errors.append(signed_error)
-        points.append(HourPoint(
-            start_time=key,
-            forecast_mw=predicted,
-            downside_mw=downside,
-            upside_mw=upside,
-            actual_mw=measured,
-            error_mw=signed_error,
-            publish_time=entry["publish_time"],
-            history_count=len(error_rates),
-        ))
+        points.append(
+            HourPoint(
+                start_time=key,
+                forecast_mw=predicted,
+                downside_mw=downside,
+                upside_mw=upside,
+                actual_mw=measured,
+                error_mw=signed_error,
+                publish_time=entry["publish_time"],
+                history_count=len(error_rates),
+            )
+        )
 
     def metrics(values: list[float]) -> Metrics | None:
         if not values:
@@ -94,13 +111,24 @@ def build_decision(
 
     forecast_mwh = sum(p.forecast_mw for p in points)
     actual_mwh = sum(p.actual_mw for p in points if p.actual_mw is not None) if points else None
-    planning_error_rate = max(0, percentile(daily_error_rates, settings.planning_coverage_target)) if daily_error_rates else None
-    downside_mwh = planning_level(forecast_mwh, daily_error_rates, settings.planning_coverage_target)
+    planning_error_rate = (
+        max(0, percentile(daily_error_rates, settings.planning_coverage_target))
+        if daily_error_rates
+        else None
+    )
+    downside_mwh = planning_level(
+        forecast_mwh, daily_error_rates, settings.planning_coverage_target
+    )
     historical_daily_mape = (
         sum(daily_absolute_percentage_errors) / len(daily_absolute_percentage_errors)
-        if daily_absolute_percentage_errors else None
+        if daily_absolute_percentage_errors
+        else None
     )
-    covered = [p.actual_mw >= p.downside_mw for p in points if p.actual_mw is not None and p.downside_mw is not None]
+    covered = [
+        p.actual_mw >= p.downside_mw
+        for p in points
+        if p.actual_mw is not None and p.downside_mw is not None
+    ]
     return DecisionResponse(
         decision_date=decision_day,
         delivery_date=delivery_day,
@@ -108,14 +136,19 @@ def build_decision(
         source=data["source"],
         retrieved_at=data["retrieved_at"],
         forecast_mwh=forecast_mwh,
-        confidence_score=max(0, min(100, round(100 * (1 - historical_daily_mape)))) if historical_daily_mape is not None else None,
+        confidence_score=max(0, min(100, round(100 * (1 - historical_daily_mape))))
+        if historical_daily_mape is not None
+        else None,
         downside_mwh=downside_mwh,
         actual_mwh=actual_mwh,
         downside_coverage=sum(covered) / len(covered) if covered else None,
         risk=RiskContext(
             lookback_days=settings.lookback_days,
             completed_days=len(daily_error_rates),
-            method="80th percentile of signed percentage forecast error from prior completed days; daily rates set the daily planning level and same-hour rates set the chart band",
+            method=(
+                "Signed percentage forecast errors from prior completed days; "
+                "daily rates set the planning level and same-hour rates set the chart band"
+            ),
             coverage_target=settings.planning_coverage_target,
             planning_error_rate=planning_error_rate,
             historical_daily_mape=historical_daily_mape,
@@ -126,9 +159,7 @@ def build_decision(
     )
 
 
-def build_overview(
-    through: date, data: dict, settings: Settings | None = None
-) -> OverviewResponse:
+def build_overview(through: date, data: dict, settings: Settings | None = None) -> OverviewResponse:
     settings = settings or get_settings()
     if not settings.first_decision_date <= through <= settings.last_decision_date:
         raise ValueError("Decision date must be in January 2026")
@@ -136,7 +167,12 @@ def build_overview(
         build_decision(settings.first_decision_date + timedelta(days=offset), data, settings)
         for offset in range((through - settings.first_decision_date).days + 1)
     ]
-    errors = [hour.error_mw for decision in decisions for hour in decision.hours if hour.error_mw is not None]
+    errors = [
+        hour.error_mw
+        for decision in decisions
+        for hour in decision.hours
+        if hour.error_mw is not None
+    ]
     covered_days = [
         decision.actual_mwh >= decision.downside_mwh
         for decision in decisions
@@ -144,15 +180,24 @@ def build_overview(
     ]
     return OverviewResponse(
         through_date=through,
-        days=[DaySummary(
-            decision_date=d.decision_date,
-            delivery_date=d.delivery_date,
-            forecast_mwh=d.forecast_mwh,
-            actual_mwh=d.actual_mwh,
-            mae_mw=d.realized.mae_mw if d.realized else None,
-            downside_coverage=d.downside_coverage,
-        ) for d in decisions],
-        heatmap=[HeatmapPoint(decision_date=d.decision_date, hour=int(h.start_time[11:13]), error_mw=h.error_mw) for d in decisions for h in d.hours],
+        days=[
+            DaySummary(
+                decision_date=d.decision_date,
+                delivery_date=d.delivery_date,
+                forecast_mwh=d.forecast_mwh,
+                actual_mwh=d.actual_mwh,
+                mae_mw=d.realized.mae_mw if d.realized else None,
+                downside_coverage=d.downside_coverage,
+            )
+            for d in decisions
+        ],
+        heatmap=[
+            HeatmapPoint(
+                decision_date=d.decision_date, hour=int(h.start_time[11:13]), error_mw=h.error_mw
+            )
+            for d in decisions
+            for h in d.hours
+        ],
         mean_absolute_error_mw=sum(abs(x) for x in errors) / len(errors) if errors else None,
         mean_bias_mw=sum(errors) / len(errors) if errors else None,
         downside_coverage=sum(covered_days) / len(covered_days) if covered_days else None,

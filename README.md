@@ -48,13 +48,17 @@ docker compose up --build
 
 Open the [app](http://localhost:8088) or the [API docs](http://localhost:8000/docs). For a local run without Docker, install `api/requirements.txt` and run `uvicorn app.main:app --reload` from `api/`; run `npm install && npm run dev` from `client/`.
 
-The API needs network access to Elexon. Copy `api/.env.example` to `api/.env` to override server settings, or set the same variables in the deployment environment. The client uses `VITE_API_BASE_URL` from `client/.env.example` when its API is on another origin; leave it empty for the local proxy.
+For local Python runs, copy `api/.env.example` to `api/.env` to override server settings. Install `api/requirements-dev.txt` to run the Python lint and format checks.
+
+The API needs network access to Elexon. In Docker or a deployed service, set the variables from `api/.env.example` in the service environment. The client uses `VITE_API_BASE_URL` from `client/.env.example` when its API is on another origin; leave it empty for the local proxy.
 
 ## Verification and deployment
 
 ```bash
-cd api && python -m unittest discover -s tests
-cd client && npm run build
+(cd api && python -m unittest discover -s tests)
+(cd api && ruff check app tests && ruff format --check app tests)
+(cd client && npm run build)
+(cd client && npm run lint && npm run format:check)
 ```
 
 The client and API can be deployed as separate Vercel projects using `client/` and `api/` as root directories. Set `VITE_API_BASE_URL` on the client to the API origin. **Live demo URL:** to be added after deployment.

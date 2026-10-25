@@ -19,7 +19,9 @@ class ElexonCacheTests(unittest.IsolatedAsyncioTestCase):
         async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as client:
             source = ElexonAdapter(client)
             day = date(2026, 1, 14)
-            self.assertEqual(await source.forecasts_published_on(day), await source.forecasts_published_on(day))
+            self.assertEqual(
+                await source.forecasts_published_on(day), await source.forecasts_published_on(day)
+            )
             self.assertEqual(await source.wind_actuals_on(day), await source.wind_actuals_on(day))
             self.assertEqual(len(requests), 2)
             await source.forecasts_published_on(day + timedelta(days=1))

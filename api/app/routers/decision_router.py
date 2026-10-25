@@ -1,7 +1,8 @@
 from datetime import date
 
 import httpx
-from fastapi import APIRouter, HTTPException, Request, status as HTTP_STATUS
+from fastapi import APIRouter, HTTPException, Request
+from fastapi import status as HTTP_STATUS
 
 from app.schemas.decision_schema import DecisionResponse, OverviewResponse
 from app.services.prepare_data import DataUnavailableError

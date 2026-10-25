@@ -27,7 +27,9 @@ def freeze_forecast(
     rows: list[dict], decision_day: date, cutoff_hour_utc: int | None = None
 ) -> dict[str, dict]:
     """Latest available publication per target hour at 09:00 UTC."""
-    cutoff_hour = cutoff_hour_utc if cutoff_hour_utc is not None else get_settings().decision_cutoff_hour_utc
+    cutoff_hour = (
+        cutoff_hour_utc if cutoff_hour_utc is not None else get_settings().decision_cutoff_hour_utc
+    )
     cutoff = datetime.combine(decision_day, time(cutoff_hour), timezone.utc)
     delivery_day = decision_day + timedelta(days=1)
     chosen: dict[str, dict] = {}
@@ -38,7 +40,10 @@ def freeze_forecast(
             continue
         key = target.isoformat().replace("+00:00", "Z")
         if key not in chosen or published > parse_timestamp(chosen[key]["publish_time"]):
-            chosen[key] = {"forecast_mw": float(row["generation"]), "publish_time": row["publishTime"]}
+            chosen[key] = {
+                "forecast_mw": float(row["generation"]),
+                "publish_time": row["publishTime"],
+            }
     return dict(sorted(chosen.items()))
 
 
@@ -73,10 +78,16 @@ async def load_generation_data(
         async with semaphore:
             return day.isoformat(), await source.wind_actuals_on(day)
 
-    forecast_days = list(dates_inclusive(first_required_decision - timedelta(days=1), last_decision))
+    forecast_days = list(
+        dates_inclusive(first_required_decision - timedelta(days=1), last_decision)
+    )
     # Settlement dates and UTC days differ during British Summer Time.
     # The next settlement date can contain the final UTC hour of a day.
-    actual_days = list(dates_inclusive(first_required_decision + timedelta(days=1), last_decision + timedelta(days=2)))
+    actual_days = list(
+        dates_inclusive(
+            first_required_decision + timedelta(days=1), last_decision + timedelta(days=2)
+        )
+    )
     forecast_pairs, actual_pairs = await asyncio.gather(
         asyncio.gather(*(load_forecasts(day) for day in forecast_days)),
         asyncio.gather(*(load_actuals(day) for day in actual_days)),
@@ -93,7 +104,9 @@ async def load_generation_data(
         day.isoformat(): hourly_actuals(
             actual[day.isoformat()] + actual[(day + timedelta(days=1)).isoformat()], day
         )
-        for day in dates_inclusive(first_required_decision + timedelta(days=1), last_decision + timedelta(days=1))
+        for day in dates_inclusive(
+            first_required_decision + timedelta(days=1), last_decision + timedelta(days=1)
+        )
     }
     for decision_day, hours in frozen.items():
         delivery_day = (date.fromisoformat(decision_day) + timedelta(days=1)).isoformat()

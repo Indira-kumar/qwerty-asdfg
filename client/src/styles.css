@@ -1,4 +1,15 @@
-:root { font-family: 'Instrument Sans', sans-serif; color: #142338; background: #f7f9fb; font-synthesis: none; }
-* { box-sizing: border-box; }
-body { margin: 0; }
-a { color: inherit; }
+:root {
+  font-family: "Instrument Sans", sans-serif;
+  color: #142338;
+  background: #f7f9fb;
+  font-synthesis: none;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+a {
+  color: inherit;
+}

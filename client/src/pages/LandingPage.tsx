@@ -3,15 +3,9 @@ import { ArrowRight, ArrowUpRight, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import "../landing.css";
 
-const forecast = [
-  12.8, 13.4, 14.1, 15.7, 16.2, 15.5, 14.8, 13.9, 13.1, 12.7, 11.9, 11.4, 10.8,
-];
-const downside = [
-  10.6, 11.1, 11.7, 13.1, 13.4, 12.7, 12.1, 11.3, 10.7, 10.3, 9.5, 9.1, 8.6,
-];
-const actual = [
-  12.2, 12.8, 13.5, 14.5, 14.7, 14.2, 13.4, 12.7, 12.3, 11.9, 11.2, 10.7, 10.1,
-];
+const forecast = [12.8, 13.4, 14.1, 15.7, 16.2, 15.5, 14.8, 13.9, 13.1, 12.7, 11.9, 11.4, 10.8];
+const downside = [10.6, 11.1, 11.7, 13.1, 13.4, 12.7, 12.1, 11.3, 10.7, 10.3, 9.5, 9.1, 8.6];
+const actual = [12.2, 12.8, 13.5, 14.5, 14.7, 14.2, 13.4, 12.7, 12.3, 11.9, 11.2, 10.7, 10.1];
 const hours = [
   "00:00",
   "02:00",
@@ -28,14 +22,10 @@ const hours = [
   "24:00",
 ];
 const plot = { left: 42, right: 586, top: 22, bottom: 225 };
-const x = (index: number) =>
-  plot.left + (index / (forecast.length - 1)) * (plot.right - plot.left);
-const y = (value: number) =>
-  plot.bottom - ((value - 8) / 10) * (plot.bottom - plot.top);
+const x = (index: number) => plot.left + (index / (forecast.length - 1)) * (plot.right - plot.left);
+const y = (value: number) => plot.bottom - ((value - 8) / 10) * (plot.bottom - plot.top);
 const line = (values: number[]) =>
-  values
-    .map((value, index) => `${index === 0 ? "M" : "L"} ${x(index)} ${y(value)}`)
-    .join(" ");
+  values.map((value, index) => `${index === 0 ? "M" : "L"} ${x(index)} ${y(value)}`).join(" ");
 const band = `${line(forecast)} ${downside.map((_, index) => `L ${x(downside.length - 1 - index)} ${y(downside[downside.length - 1 - index])}`).join(" ")} Z`;
 
 function WindwardMark() {
@@ -62,7 +52,12 @@ function WindScene() {
   ];
 
   return (
-    <svg className="wind-scene" viewBox="0 0 1440 650" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <svg
+      className="wind-scene"
+      viewBox="0 0 1440 650"
+      preserveAspectRatio="xMidYMax slice"
+      aria-hidden="true"
+    >
       <defs>
         <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
           <stop stopColor="#37446e" />
@@ -81,15 +76,33 @@ function WindScene() {
       <circle cx="1068" cy="397" r="260" fill="url(#sunGlow)" />
       <circle cx="1068" cy="397" r="92" fill="#f7d1b3" opacity=".23" />
       <ellipse cx="720" cy="512" rx="610" ry="112" fill="url(#horizon)" />
-      <path d="M0 511C173 500 330 503 468 510c171 8 323-6 469-2 194 6 321 5 503-4v146H0Z" fill="url(#sea)" />
-      <path d="M0 516c146 13 278 4 424 12 162 9 345-4 526 3 166 7 327-9 490 2" fill="none" stroke="#d6c7df" strokeOpacity=".3" strokeWidth="2" />
-      <path d="M0 557c241-8 381 12 612 4 278-10 516 2 828-6M0 595c247 6 513-11 734 0 209 10 420 0 706 8" fill="none" stroke="#b8c4ec" strokeOpacity=".12" strokeWidth="2" />
+      <path
+        d="M0 511C173 500 330 503 468 510c171 8 323-6 469-2 194 6 321 5 503-4v146H0Z"
+        fill="url(#sea)"
+      />
+      <path
+        d="M0 516c146 13 278 4 424 12 162 9 345-4 526 3 166 7 327-9 490 2"
+        fill="none"
+        stroke="#d6c7df"
+        strokeOpacity=".3"
+        strokeWidth="2"
+      />
+      <path
+        d="M0 557c241-8 381 12 612 4 278-10 516 2 828-6M0 595c247 6 513-11 734 0 209 10 420 0 706 8"
+        fill="none"
+        stroke="#b8c4ec"
+        strokeOpacity=".12"
+        strokeWidth="2"
+      />
       {turbines.map(({ x, y, size, delay }) => (
         <g key={x} transform={`translate(${x} ${y}) scale(${size})`} className="scene-turbine">
           <path d="M0 0 0-154" stroke="#e9e9fa" strokeWidth="4" />
           <path d="M-12 0h24" stroke="#bfc8ed" strokeWidth="4" />
           <g className="scene-rotor" style={{ animationDelay: delay }}>
-            <path d="M0-154 2-216 6-221 4-172ZM0-154l52 32 4 7-43-31ZM0-154l-55 34-7 1 47-35Z" fill="#f4efff" />
+            <path
+              d="M0-154 2-216 6-221 4-172ZM0-154l52 32 4 7-43-31ZM0-154l-55 34-7 1 47-35Z"
+              fill="#f4efff"
+            />
           </g>
           <circle cy="-154" r="5" fill="#fff8f5" />
         </g>
@@ -104,10 +117,7 @@ function DecisionPreview() {
   const signedError = forecast[selected] - actual[selected];
 
   return (
-    <div
-      className="decision-preview"
-      aria-label="Illustrative wind decision preview"
-    >
+    <div className="decision-preview" aria-label="Illustrative wind decision preview">
       <div className="preview-heading">
         <div>
           <span className="preview-kicker">Decision snapshot</span>
@@ -207,20 +217,10 @@ function DecisionPreview() {
           <text x={plot.left} y="251" className="preview-axis-label">
             00:00
           </text>
-          <text
-            x={x(6)}
-            y="251"
-            textAnchor="middle"
-            className="preview-axis-label"
-          >
+          <text x={x(6)} y="251" textAnchor="middle" className="preview-axis-label">
             12:00
           </text>
-          <text
-            x={plot.right}
-            y="251"
-            textAnchor="end"
-            className="preview-axis-label"
-          >
+          <text x={plot.right} y="251" textAnchor="end" className="preview-axis-label">
             24:00
           </text>
         </svg>
@@ -278,9 +278,7 @@ function DecisionPreview() {
           </div>
         )}
       </div>
-      <p className="preview-disclaimer">
-        Illustrative preview. Dashboard figures use Elexon data.
-      </p>
+      <p className="preview-disclaimer">Illustrative preview. Dashboard figures use Elexon data.</p>
     </div>
   );
 }
@@ -310,8 +308,8 @@ export function LandingPage() {
             <p className="hero-context">For the desk buying tomorrow's power</p>
             <h1 id="landing-title">Buy power before you know the wind</h1>
             <p className="hero-lead">
-              At 09:00 GMT, see tomorrow's wind forecast, how accurate recent
-              forecasts were, and a cautious level to plan against.
+              At 09:00 GMT, see tomorrow's wind forecast, how accurate recent forecasts were, and a
+              cautious level to plan against.
             </p>
             <div className="hero-actions">
               <Link className="landing-primary-cta" to="/dashboard">
@@ -335,8 +333,8 @@ export function LandingPage() {
               <span className="section-index">The buying problem</span>
               <h2 id="problem-title">If wind falls short, you still have to cover demand.</h2>
               <p>
-                The purchase comes before the generation. A forecast alone
-                cannot tell the desk how much wind to plan around.
+                The purchase comes before the generation. A forecast alone cannot tell the desk how
+                much wind to plan around.
               </p>
             </div>
             <div className="problem-sequence" aria-label="Decision sequence">
@@ -344,7 +342,10 @@ export function LandingPage() {
               <article>
                 <span className="sequence-time">09:00 · decision day</span>
                 <h3>Freeze the forecast.</h3>
-                <p>Use the latest version published by the cutoff. Later updates cannot rewrite the decision.</p>
+                <p>
+                  Use the latest version published by the cutoff. Later updates cannot rewrite the
+                  decision.
+                </p>
               </article>
               <article>
                 <span className="sequence-time">Before the purchase</span>
@@ -366,9 +367,8 @@ export function LandingPage() {
               <h2 id="product-title">The wind assumption, with evidence attached.</h2>
             </div>
             <p>
-              See the 09:00 forecast, recent accuracy, and a cautious planning
-              level. Reveal actual generation after delivery and inspect the
-              error hour by hour.
+              See the 09:00 forecast, recent accuracy, and a cautious planning level. Reveal actual
+              generation after delivery and inspect the error hour by hour.
             </p>
           </div>
           <div className="product-preview">
@@ -379,20 +379,38 @@ export function LandingPage() {
           <div className="proof-copy">
             <span className="section-index">The January pilot</span>
             <h2 id="proof-title">Every wind assumption should come with its evidence.</h2>
-            <Link to="/dashboard">Inspect the decision history <ArrowRight size={18} /></Link>
+            <Link to="/dashboard">
+              Inspect the decision history <ArrowRight size={18} />
+            </Link>
           </div>
           <div className="proof-figures">
-            <div><strong>31</strong><span>decision dates</span></div>
-            <div><strong>2.04 <small>GW</small></strong><span>mean absolute hourly error</span></div>
-            <div><strong>77%</strong><span>of days at or above the planning level</span></div>
+            <div>
+              <strong>31</strong>
+              <span>decision dates</span>
+            </div>
+            <div>
+              <strong>
+                2.04 <small>GW</small>
+              </strong>
+              <span>mean absolute hourly error</span>
+            </div>
+            <div>
+              <strong>77%</strong>
+              <span>of days at or above the planning level</span>
+            </div>
           </div>
         </section>
         <section className="landing-close" aria-labelledby="close-title">
           <div className="close-content">
             <span>Ready to examine the buying decision?</span>
             <h2 id="close-title">Make the wind assumption one you can explain.</h2>
-            <p>Start with the January pilot. Select a decision date, inspect each delivery hour, and see how the forecast held up.</p>
-            <Link to="/dashboard">Explore the dashboard <ArrowUpRight size={19} /></Link>
+            <p>
+              Start with the January pilot. Select a decision date, inspect each delivery hour, and
+              see how the forecast held up.
+            </p>
+            <Link to="/dashboard">
+              Explore the dashboard <ArrowUpRight size={19} />
+            </Link>
           </div>
         </section>
       </main>
@@ -401,7 +419,10 @@ export function LandingPage() {
           <WindwardMark />
           <span>windward</span>
         </div>
-        <p>Windward informs the wind input to a purchase. Total volume still depends on demand, contracts, and other generation.</p>
+        <p>
+          Windward informs the wind input to a purchase. Total volume still depends on demand,
+          contracts, and other generation.
+        </p>
         <span>GB metered wind · January 2026 pilot</span>
       </footer>
     </div>

@@ -38,8 +38,16 @@ def example_generation_data() -> dict:
 class DataPreparationTests(unittest.TestCase):
     def test_forecast_freezes_before_cutoff(self):
         rows = [
-            {"startTime": "2026-01-15T00:00:00Z", "publishTime": "2026-01-14T07:30:00Z", "generation": 15834},
-            {"startTime": "2026-01-15T00:00:00Z", "publishTime": "2026-01-14T09:30:00Z", "generation": 15828},
+            {
+                "startTime": "2026-01-15T00:00:00Z",
+                "publishTime": "2026-01-14T07:30:00Z",
+                "generation": 15834,
+            },
+            {
+                "startTime": "2026-01-15T00:00:00Z",
+                "publishTime": "2026-01-14T09:30:00Z",
+                "generation": 15828,
+            },
         ]
         frozen = freeze_forecast(rows, date(2026, 1, 14))
         self.assertEqual(frozen["2026-01-15T00:00:00Z"]["forecast_mw"], 15834)
