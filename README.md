@@ -37,7 +37,7 @@ The 21-day percentage method was selected using December 2025 decisions as a pre
 
 Run `cd api && python -m app.services.compare_planning` to reproduce the candidate comparison.
 
-FUELHH covers metered Great Britain wind, so it is not a complete measure of UK renewable generation. The app does not calculate total power to buy because demand, existing contracted supply, and other generation are outside the two permitted feeds.
+FUELHH/WIND measures wind farms with operational meters on the Great Britain transmission system. [Elexon notes](https://bmrs.elexon.co.uk/generation-by-fuel-type) that its fuel-type outturn excludes embedded generation and wind farms without operational meters. This is a coverage limit, not missing API records: those farms still generate electricity, but their output is absent from this series. The app therefore describes only this metered wind subset. It does not calculate total power to buy because demand, existing contracted supply, and other generation are outside the two permitted feeds.
 
 ## Verification and deployment
 
