@@ -14,6 +14,8 @@ class RiskContext(BaseModel):
     lookback_days: int
     completed_days: int
     method: str
+    coverage_target: float
+    historical_daily_mape: float | None
     baseline: Metrics | None
 
 
@@ -35,6 +37,7 @@ class DecisionResponse(BaseModel):
     source: str
     prepared_at: str
     forecast_mwh: float
+    confidence_score: int | None
     downside_mwh: float | None
     actual_mwh: float | None
     downside_coverage: float | None
@@ -64,4 +67,5 @@ class OverviewResponse(BaseModel):
     january_mae_mw: float | None
     january_bias_mw: float | None
     downside_coverage: float | None
+    evaluated_days: int
     evaluated_hours: int

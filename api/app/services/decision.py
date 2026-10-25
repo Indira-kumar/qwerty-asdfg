@@ -6,6 +6,7 @@ from pathlib import Path
 from app.schemas.decision import DaySummary, DecisionResponse, HeatmapPoint, HourPoint, Metrics, OverviewResponse, RiskContext
 
 DATA_PATH = Path(__file__).resolve().parents[2] / "data" / "january_2026.json"
+PLANNING_COVERAGE_TARGET = 0.75
 
 
 @lru_cache(maxsize=1)
@@ -31,6 +32,8 @@ def build_decision(decision_day: date) -> DecisionResponse:
 
     errors_by_hour: dict[int, list[float]] = {hour: [] for hour in range(24)}
     baseline_errors: list[float] = []
+    daily_errors: list[float] = []
+    daily_absolute_percentage_errors: list[float] = []
     completed_days = 0
     for lag in range(1, 57):
         historical_delivery = decision_day - timedelta(days=lag)
@@ -38,14 +41,23 @@ def build_decision(decision_day: date) -> DecisionResponse:
         old_forecast = data["forecasts"].get(historical_decision.isoformat(), {})
         old_actual = data["actuals"].get(historical_delivery.isoformat(), {})
         day_has_pairs = False
+        day_pairs: list[tuple[float, float]] = []
         for key, entry in old_forecast.items():
             if key not in old_actual:
                 continue
-            error = entry["forecast_mw"] - old_actual[key]
+            predicted, measured = entry["forecast_mw"], old_actual[key]
+            error = predicted - measured
             errors_by_hour[int(key[11:13])].append(error)
             baseline_errors.append(error)
+            day_pairs.append((predicted, measured))
             day_has_pairs = True
         completed_days += day_has_pairs
+        if len(day_pairs) == 24:
+            daily_error = sum(predicted - measured for predicted, measured in day_pairs)
+            actual_energy = sum(measured for _, measured in day_pairs)
+            daily_errors.append(daily_error)
+            if actual_energy > 0:
+                daily_absolute_percentage_errors.append(abs(daily_error) / actual_energy)
 
     points = []
     observed_errors = []
@@ -53,8 +65,8 @@ def build_decision(decision_day: date) -> DecisionResponse:
         hour = int(key[11:13])
         errors = errors_by_hour[hour]
         predicted = entry["forecast_mw"]
-        downside = max(0, predicted - max(percentile(errors, 0.9), 0)) if errors else None
-        upside = max(predicted, predicted - percentile(errors, 0.1)) if errors else None
+        downside = max(0, predicted - max(percentile(errors, PLANNING_COVERAGE_TARGET), 0)) if errors else None
+        upside = max(predicted, predicted - percentile(errors, 1 - PLANNING_COVERAGE_TARGET)) if errors else None
         measured = actual.get(key)
         signed_error = predicted - measured if measured is not None else None
         if signed_error is not None:
@@ -80,6 +92,13 @@ def build_decision(decision_day: date) -> DecisionResponse:
             observations=len(values),
         )
 
+    forecast_mwh = sum(p.forecast_mw for p in points)
+    actual_mwh = sum(p.actual_mw for p in points if p.actual_mw is not None) if points else None
+    downside_mwh = max(0, forecast_mwh - max(percentile(daily_errors, PLANNING_COVERAGE_TARGET), 0)) if daily_errors else None
+    historical_daily_mape = (
+        sum(daily_absolute_percentage_errors) / len(daily_absolute_percentage_errors)
+        if daily_absolute_percentage_errors else None
+    )
     covered = [p.actual_mw >= p.downside_mw for p in points if p.actual_mw is not None and p.downside_mw is not None]
     return DecisionResponse(
         decision_date=decision_day,
@@ -87,14 +106,17 @@ def build_decision(decision_day: date) -> DecisionResponse:
         cutoff_time=f"{decision_day.isoformat()}T09:00:00Z",
         source=data["source"],
         prepared_at=data["prepared_at"],
-        forecast_mwh=sum(p.forecast_mw for p in points),
-        downside_mwh=sum(p.downside_mw for p in points if p.downside_mw is not None) if points else None,
-        actual_mwh=sum(p.actual_mw for p in points if p.actual_mw is not None) if points else None,
+        forecast_mwh=forecast_mwh,
+        confidence_score=max(0, min(100, round(100 * (1 - historical_daily_mape)))) if historical_daily_mape is not None else None,
+        downside_mwh=downside_mwh,
+        actual_mwh=actual_mwh,
         downside_coverage=sum(covered) / len(covered) if covered else None,
         risk=RiskContext(
             lookback_days=56,
             completed_days=completed_days,
-            method="Per-hour empirical 90th percentile of overforecast error from prior completed days",
+            method="75th percentile of signed forecast errors from prior completed days; daily errors set the daily planning level and same-hour errors set the chart band",
+            coverage_target=PLANNING_COVERAGE_TARGET,
+            historical_daily_mape=historical_daily_mape,
             baseline=metrics(baseline_errors),
         ),
         realized=metrics(observed_errors),
@@ -106,7 +128,11 @@ def build_decision(decision_day: date) -> DecisionResponse:
 def build_overview() -> OverviewResponse:
     decisions = [build_decision(date(2026, 1, day)) for day in range(1, 32)]
     errors = [hour.error_mw for decision in decisions for hour in decision.hours if hour.error_mw is not None]
-    covered = [hour.actual_mw >= hour.downside_mw for decision in decisions for hour in decision.hours if hour.actual_mw is not None and hour.downside_mw is not None]
+    covered_days = [
+        decision.actual_mwh >= decision.downside_mwh
+        for decision in decisions
+        if decision.actual_mwh is not None and decision.downside_mwh is not None
+    ]
     return OverviewResponse(
         days=[DaySummary(
             decision_date=d.decision_date,
@@ -119,6 +145,7 @@ def build_overview() -> OverviewResponse:
         heatmap=[HeatmapPoint(decision_date=d.decision_date, hour=int(h.start_time[11:13]), error_mw=h.error_mw) for d in decisions for h in d.hours],
         january_mae_mw=sum(abs(x) for x in errors) / len(errors) if errors else None,
         january_bias_mw=sum(errors) / len(errors) if errors else None,
-        downside_coverage=sum(covered) / len(covered) if covered else None,
+        downside_coverage=sum(covered_days) / len(covered_days) if covered_days else None,
+        evaluated_days=len(covered_days),
         evaluated_hours=len(errors),
     )

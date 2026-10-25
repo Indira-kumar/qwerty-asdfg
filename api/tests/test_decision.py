@@ -36,8 +36,18 @@ class DecisionTests(unittest.TestCase):
         with patch("app.services.decision.load_snapshot", return_value=changed):
             after = build_decision(date(2026, 1, 1))
         self.assertEqual(before.risk, after.risk)
+        self.assertEqual(before.confidence_score, after.confidence_score)
+        self.assertEqual(before.downside_mwh, after.downside_mwh)
         self.assertEqual(before.hours[0].downside_mw, after.hours[0].downside_mw)
         self.assertNotEqual(before.realized, after.realized)
+
+    def test_daily_planning_level_uses_daily_errors_and_narrows_january_nine_gap(self):
+        decision = build_decision(date(2026, 1, 8))
+        self.assertEqual(decision.risk.coverage_target, 0.75)
+        self.assertGreater(decision.downside_mwh, 225_000)
+        self.assertLess(decision.downside_mwh, 230_000)
+        self.assertGreater(decision.downside_mwh, sum(hour.downside_mw for hour in decision.hours))
+        self.assertEqual(decision.confidence_score, 86)
 
     def test_all_january_decisions_have_complete_delivery_days(self):
         for day in range(1, 32):
