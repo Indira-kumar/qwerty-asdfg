@@ -9,9 +9,11 @@ router = APIRouter(prefix="/api/decisions", tags=["decisions"])
 
 
 @router.get("", response_model=OverviewResponse)
-def get_overview() -> OverviewResponse:
+def get_overview(through: date = date(2026, 1, 31)) -> OverviewResponse:
     try:
-        return build_overview()
+        return build_overview(through)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except FileNotFoundError as exc:
         raise HTTPException(status_code=503, detail="Elexon snapshot has not been prepared") from exc
 

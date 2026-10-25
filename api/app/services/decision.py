@@ -133,9 +133,11 @@ def build_decision(decision_day: date) -> DecisionResponse:
     )
 
 
-@lru_cache(maxsize=1)
-def build_overview() -> OverviewResponse:
-    decisions = [build_decision(date(2026, 1, day)) for day in range(1, 32)]
+@lru_cache(maxsize=31)
+def build_overview(through: date = date(2026, 1, 31)) -> OverviewResponse:
+    if not date(2026, 1, 1) <= through <= date(2026, 1, 31):
+        raise ValueError("Decision date must be in January 2026")
+    decisions = [build_decision(date(2026, 1, day)) for day in range(1, through.day + 1)]
     errors = [hour.error_mw for decision in decisions for hour in decision.hours if hour.error_mw is not None]
     covered_days = [
         decision.actual_mwh >= decision.downside_mwh
@@ -143,6 +145,7 @@ def build_overview() -> OverviewResponse:
         if decision.actual_mwh is not None and decision.downside_mwh is not None
     ]
     return OverviewResponse(
+        through_date=through,
         days=[DaySummary(
             decision_date=d.decision_date,
             delivery_date=d.delivery_date,
@@ -152,8 +155,8 @@ def build_overview() -> OverviewResponse:
             downside_coverage=d.downside_coverage,
         ) for d in decisions],
         heatmap=[HeatmapPoint(decision_date=d.decision_date, hour=int(h.start_time[11:13]), error_mw=h.error_mw) for d in decisions for h in d.hours],
-        january_mae_mw=sum(abs(x) for x in errors) / len(errors) if errors else None,
-        january_bias_mw=sum(errors) / len(errors) if errors else None,
+        mean_absolute_error_mw=sum(abs(x) for x in errors) / len(errors) if errors else None,
+        mean_bias_mw=sum(errors) / len(errors) if errors else None,
         downside_coverage=sum(covered_days) / len(covered_days) if covered_days else None,
         evaluated_days=len(covered_days),
         evaluated_hours=len(errors),

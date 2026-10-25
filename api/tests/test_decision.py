@@ -62,6 +62,15 @@ class DecisionTests(unittest.TestCase):
         self.assertEqual(overview.evaluated_days, 31)
         self.assertAlmostEqual(overview.downside_coverage, 24 / 31)
 
+    def test_overview_stops_at_selected_decision_date(self):
+        through = date(2026, 1, 9)
+        overview = build_overview(through)
+        self.assertEqual(overview.through_date, through)
+        self.assertEqual(len(overview.days), 9)
+        self.assertEqual(overview.days[-1].decision_date, through)
+        self.assertEqual(overview.evaluated_days, 9)
+        self.assertEqual(len(overview.heatmap), 9 * 24)
+
     def test_all_january_decisions_have_complete_delivery_days(self):
         for day in range(1, 32):
             decision = build_decision(date(2026, 1, day))

@@ -48,10 +48,11 @@ type Decision = {
   hours: Hour[];
 };
 type Overview = {
+  through_date: string;
   days: { decision_date: string; mae_mw: number | null }[];
   heatmap: { decision_date: string; hour: number; error_mw: number | null }[];
-  january_mae_mw: number | null;
-  january_bias_mw: number | null;
+  mean_absolute_error_mw: number | null;
+  mean_bias_mw: number | null;
   downside_coverage: number | null;
   evaluated_days: number;
   evaluated_hours: number;
@@ -284,7 +285,8 @@ export function DashboardPage() {
   const [error, setError] = useState("");
   useEffect(() => {
     const c = new AbortController();
-    fetch(`${API}/api/decisions`, { signal: c.signal })
+    setOverview(null);
+    fetch(`${API}/api/decisions?through=${selected}`, { signal: c.signal })
       .then((r) => {
         if (!r.ok) throw Error("Could not load January overview");
         return r.json();
@@ -294,7 +296,7 @@ export function DashboardPage() {
         if (e.name !== "AbortError") setError(e.message);
       });
     return () => c.abort();
-  }, []);
+  }, [selected]);
   useEffect(() => {
     const c = new AbortController();
     setDecision(null);
@@ -542,7 +544,7 @@ export function DashboardPage() {
               <>
                 <section className="dash-backtest">
                   <article>
-                    <span>January backtest</span>
+                    <span>Through {dateLabel(selected)}</span>
                     <strong>
                       {overview?.downside_coverage == null
                         ? "—"
@@ -560,11 +562,11 @@ export function DashboardPage() {
                   <article>
                     <span>Realized accuracy</span>
                     <strong>
-                      {overview?.january_mae_mw == null
-                        ? "—"
-                        : `${(overview.january_mae_mw / 1000).toFixed(2)} GW`}
+                        {overview?.mean_absolute_error_mw == null
+                          ? "—"
+                          : `${(overview.mean_absolute_error_mw / 1000).toFixed(2)} GW`}
                     </strong>
-                    <h3>January mean absolute error</h3>
+                    <h3>Mean absolute error to date</h3>
                     <p>
                       Average absolute gap between the forecast and
                       measured wind.
@@ -573,11 +575,11 @@ export function DashboardPage() {
                   <article>
                     <span>Systematic direction</span>
                     <strong>
-                      {overview?.january_bias_mw == null
-                        ? "—"
-                        : `+${(overview.january_bias_mw / 1000).toFixed(2)} GW`}
+                        {overview?.mean_bias_mw == null
+                          ? "—"
+                          : `${overview.mean_bias_mw >= 0 ? "+" : ""}${(overview.mean_bias_mw / 1000).toFixed(2)} GW`}
                     </strong>
-                    <h3>January forecast bias</h3>
+                    <h3>Forecast bias to date</h3>
                     <p>
                       Positive means forecasts were above actual wind on
                       average.
@@ -589,7 +591,7 @@ export function DashboardPage() {
                     <div className="dash-panel-head">
                       <div>
                         <span className="dash-kicker">
-                          31 decisions × 24 hours
+                          {overview.days.length} {overview.days.length === 1 ? "decision" : "decisions"} × 24 hours
                         </span>
                         <h2>Where the forecast missed.</h2>
                         <p>

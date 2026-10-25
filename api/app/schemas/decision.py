@@ -63,10 +63,11 @@ class HeatmapPoint(BaseModel):
 
 
 class OverviewResponse(BaseModel):
+    through_date: date
     days: list[DaySummary]
     heatmap: list[HeatmapPoint]
-    january_mae_mw: float | None
-    january_bias_mw: float | None
+    mean_absolute_error_mw: float | None
+    mean_bias_mw: float | None
     downside_coverage: float | None
     evaluated_days: int
     evaluated_hours: int
