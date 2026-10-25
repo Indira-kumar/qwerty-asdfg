@@ -31,6 +31,12 @@ Decisions made on the app are documented at: [DECISIONS.md](./DECISIONS.md)
 
 ## Local setup
 
+Clone the repo:
+```
+git clone https://github.com/Indira-kumar/qwerty-asdfg.git
+cd qwerty-asdfg
+```
+
 From the repo root, run:
 
 ```bash
